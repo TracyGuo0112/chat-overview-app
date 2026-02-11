@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   type SortingState,
   type VisibilityState,
@@ -22,7 +23,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { roles } from '../data/data'
 import { type User } from '../data/schema'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { usersColumns as columns } from './users-columns'
@@ -38,6 +38,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])
+  const routeNavigate = useNavigate()
 
   // Local state management for table (uncomment to use local-only state, not synced with URL)
   // const [columnFilters, onColumnFiltersChange] = useState<ColumnFiltersState>([])
@@ -56,10 +57,9 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: false },
     columnFilters: [
-      // username per-column text filter
-      { columnId: 'username', searchKey: 'username', type: 'string' },
-      { columnId: 'status', searchKey: 'status', type: 'array' },
-      { columnId: 'role', searchKey: 'role', type: 'array' },
+      { columnId: 'nickname', searchKey: 'nickname', type: 'string' },
+      { columnId: 'subscriptionStatus', searchKey: 'subscriptionStatus', type: 'array' },
+      { columnId: 'subscriptionExpired', searchKey: 'subscriptionExpired', type: 'array' },
     ],
   })
 
@@ -101,23 +101,28 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter users...'
-        searchKey='username'
+        searchPlaceholder='搜索昵称...'
+        searchKey='nickname'
         filters={[
           {
-            columnId: 'status',
-            title: 'Status',
+            columnId: 'subscriptionStatus',
+            title: '订阅状态',
             options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
-              { label: 'Invited', value: 'invited' },
-              { label: 'Suspended', value: 'suspended' },
+              { label: '免费版', value: '免费版' },
+              { label: '微光版', value: '微光版' },
+              { label: '烛照版', value: '烛照版' },
+              { label: '洞见版', value: '洞见版' },
             ],
           },
           {
-            columnId: 'role',
-            title: 'Role',
-            options: roles.map((role) => ({ ...role })),
+            columnId: 'subscriptionExpired',
+            title: '状态',
+            options: [
+              { label: '已用完', value: '已用完' },
+              { label: '未用完', value: '未用完' },
+              { label: '未过期', value: '未过期' },
+              { label: '已过期', value: '已过期' },
+            ],
           },
         ]}
       />
@@ -155,7 +160,23 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className='group/row'
+                  className='group/row cursor-pointer'
+                  title='点击查看该用户最近会话记录'
+                  onClick={(event) => {
+                    const target = event.target as HTMLElement
+                    if (target.closest('button,[role=checkbox],input,a')) {
+                      return
+                    }
+                    const conversationId = row.original.latestConversationId
+                    if (!conversationId) {
+                      window.alert('该用户暂无会话记录')
+                      return
+                    }
+                    void routeNavigate({
+                      to: '/conversations/$conversationId',
+                      params: { conversationId },
+                    })
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -180,7 +201,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  暂无数据
                 </TableCell>
               </TableRow>
             )}
