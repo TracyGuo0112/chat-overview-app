@@ -760,19 +760,6 @@ async function queryMembershipOps(params) {
       from message_tier_events
       group by user_id, tier_value
     ),
-    usage_agg as (
-      select
-        tm.tier_label as tier,
-        count(utt.user_id)::int as total_users,
-        count(utt.user_id)::int as active_users,
-        case when count(utt.user_id) = 0 then 0 else 100 end::numeric as active_rate,
-        coalesce(sum(utt.user_turns), 0)::int as total_user_turns,
-        coalesce(round((avg(utt.user_turns)::numeric), 2), 0)::numeric as avg_user_turns_per_user,
-        coalesce(round((percentile_cont(0.5) within group (order by utt.user_turns))::numeric, 2), 0)::numeric as p50_user_turns_per_user
-      from tier_map tm
-      left join user_tier_turns utt on utt.tier_value = tm.tier_value
-      group by tm.tier_label, tm.tier_value
-    ),
     latest_grant as (
       select distinct on (g.user_id)
         g.user_id,
@@ -793,6 +780,36 @@ async function queryMembershipOps(params) {
         coalesce(lg.tier, 0) as tier_value
       from "user" u
       left join latest_grant lg on lg.user_id = u.id
+    ),
+    active_user_set as (
+      select distinct t.user_id
+      from chat_message m
+      join chat_thread t on t.id = m.thread_id
+      cross join bounds b
+      where m.role = 'user'
+        and m.created_at >= b.start_ts
+        and m.created_at < b.end_ts
+    ),
+    population_agg as (
+      select
+        tm.tier_label as tier,
+        count(cut.user_id)::int as total_users,
+        count(cut.user_id) filter (where aus.user_id is not null)::int as active_users,
+        coalesce(round((count(cut.user_id) filter (where aus.user_id is not null) * 100.0 / nullif(count(cut.user_id), 0))::numeric, 2), 0)::numeric as active_rate
+      from tier_map tm
+      left join current_user_tier cut on cut.tier_value = tm.tier_value
+      left join active_user_set aus on aus.user_id = cut.user_id
+      group by tm.tier_label, tm.tier_value
+    ),
+    usage_agg as (
+      select
+        tm.tier_label as tier,
+        coalesce(sum(utt.user_turns), 0)::int as total_user_turns,
+        coalesce(round((avg(utt.user_turns)::numeric), 2), 0)::numeric as avg_user_turns_per_user,
+        coalesce(round((percentile_cont(0.5) within group (order by utt.user_turns))::numeric, 2), 0)::numeric as p50_user_turns_per_user
+      from tier_map tm
+      left join user_tier_turns utt on utt.tier_value = tm.tier_value
+      group by tm.tier_label, tm.tier_value
     ),
     user_remaining as (
       select
@@ -815,25 +832,21 @@ async function queryMembershipOps(params) {
       group by tm.tier_label, tm.tier_value
     )
     select
-      ua.tier,
-      ua.total_users,
-      ua.active_users,
-      ua.active_rate,
+      tm.tier_label as tier,
+      coalesce(pa.total_users, 0)::int as total_users,
+      coalesce(pa.active_users, 0)::int as active_users,
+      coalesce(pa.active_rate, 0)::numeric as active_rate,
       ua.total_user_turns,
       ua.avg_user_turns_per_user,
       ua.p50_user_turns_per_user,
       coalesce(ra.low_remaining_users, 0)::int as low_remaining_users,
       coalesce(ra.low_remaining_rate, 0)::numeric as low_remaining_rate,
       coalesce(ra.exhausted_users, 0)::int as exhausted_users
-    from usage_agg ua
-    left join risk_agg ra on ra.tier = ua.tier
-    order by case ua.tier
-      when '免费版' then 0
-      when '微光版' then 1
-      when '烛照版' then 2
-      when '洞见版' then 3
-      else 4
-    end;
+    from tier_map tm
+    left join population_agg pa on pa.tier = tm.tier_label
+    left join usage_agg ua on ua.tier = tm.tier_label
+    left join risk_agg ra on ra.tier = tm.tier_label
+    order by tm.tier_value;
   `;
 
   const trendSql = `
@@ -991,6 +1004,8 @@ async function queryMembershipOps(params) {
       renewed,
       conversion: {
         visitToRegister: visitors === null ? null : toPercent(registered, visitors),
+        registerToFirstConversation: toPercent(activeUsers, registered),
+        firstConversationToSubscribe: toPercent(subscribed, activeUsers),
         registerToSubscribe: toPercent(subscribed, registered),
         subscribeToRenew: toPercent(renewed, subscribed),
       },
@@ -1298,7 +1313,133 @@ async function queryOverview(params) {
 }
 
 
-async function queryUsers() {
+async function queryUsers(params = {}) {
+  const toArrayParam = (value) => {
+    if (Array.isArray(value)) {
+      return value.map((x) => String(x || "").trim()).filter(Boolean);
+    }
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  const parsePositiveInt = (value, fallback, min, max) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(Math.max(Math.floor(parsed), min), max);
+  };
+
+  const page = parsePositiveInt(params.page, 1, 1, 500);
+  const pageSize = parsePositiveInt(params.pageSize, 10, 1, 5000);
+  const offset = (page - 1) * pageSize;
+  const nicknameKeyword = typeof params.nickname === "string" ? params.nickname.trim().toLowerCase() : "";
+  const subscriptionStatusFilter = toArrayParam(params.subscriptionStatus).filter((x) =>
+    x === "免费版" || x === "微光版" || x === "烛照版" || x === "洞见版"
+  );
+  const subscriptionExpiredFilter = toArrayParam(params.subscriptionExpired).filter((x) =>
+    x === "已用完" || x === "未用完" || x === "未过期" || x === "已过期"
+  );
+  const registerStartDateRaw =
+    typeof params.registerStartDate === "string" ? params.registerStartDate.trim() : "";
+  const registerEndDateRaw =
+    typeof params.registerEndDate === "string" ? params.registerEndDate.trim() : "";
+
+  const registerStartDate = registerStartDateRaw || "";
+  const registerEndDate = registerEndDateRaw || "";
+
+  if (registerStartDate && !isValidDateParam(registerStartDate)) {
+    const err = new Error("invalid_register_start_date");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (registerEndDate && !isValidDateParam(registerEndDate)) {
+    const err = new Error("invalid_register_end_date");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (registerStartDate && registerEndDate && registerStartDate > registerEndDate) {
+    const err = new Error("register_start_date_after_end_date");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const funnelSegmentRaw = typeof params.funnelSegment === "string" ? params.funnelSegment.trim() : "";
+  const funnelSegment =
+    funnelSegmentRaw === "registered" ||
+    funnelSegmentRaw === "firstConversation" ||
+    funnelSegmentRaw === "subscribed" ||
+    funnelSegmentRaw === "renewed"
+      ? funnelSegmentRaw
+      : "";
+
+  if (funnelSegmentRaw && !funnelSegment) {
+    const err = new Error("invalid_funnel_segment");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let startDate = "";
+  let endDate = "";
+  if (funnelSegment) {
+    const range = await resolveMembershipDateRange(params || {});
+    startDate = range.startDate;
+    endDate = range.endDate;
+  }
+
+  const rangeFilterField =
+    funnelSegment === "registered"
+      ? "u.created_at"
+      : funnelSegment === "firstConversation"
+        ? "fum.first_user_message_at"
+        : funnelSegment === "subscribed"
+          ? "ps.first_paid_at"
+          : funnelSegment === "renewed"
+            ? "rs.second_paid_at"
+            : "";
+
+  const queryParams = [];
+  if (funnelSegment) {
+    queryParams.push(startDate, endDate);
+  }
+
+  const whereConditions = [];
+  if (funnelSegment) {
+    whereConditions.push(
+      `${rangeFilterField} is not null`,
+      `${rangeFilterField} >= b.start_ts`,
+      `${rangeFilterField} < b.end_ts`
+    );
+  }
+
+  if (registerStartDate) {
+    queryParams.push(registerStartDate);
+    const startPlaceholder = `$${queryParams.length}`;
+    whereConditions.push(
+      `u.created_at >= ((${startPlaceholder}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`
+    );
+  }
+  if (registerEndDate) {
+    queryParams.push(registerEndDate);
+    const endPlaceholder = `$${queryParams.length}`;
+    whereConditions.push(
+      `u.created_at < (((${endPlaceholder}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
+    );
+  }
+
+  const boundsCte = funnelSegment
+    ? `,
+    bounds as (
+      select
+        (($1::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
+        ((($2::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
+    )`
+    : "";
+  const boundsJoin = funnelSegment ? "cross join bounds b" : "";
+  const whereClause = whereConditions.length > 0 ? `where ${whereConditions.join("\n      and ")}` : "";
   const sql = `
     with latest_grant as (
       select distinct on (g.user_id)
@@ -1314,6 +1455,51 @@ async function queryUsers() {
         g.period_end desc nulls last,
         g.period_start desc nulls last
     ),
+    first_user_message as (
+      select
+        t.user_id,
+        min(m.created_at) as first_user_message_at
+      from chat_message m
+      join chat_thread t on t.id = m.thread_id
+      where m.role = 'user'
+      group by t.user_id
+    ),
+    paid_stats as (
+      select
+        lower(trim(u.email)) as email_key,
+        min(coalesce(g.period_start, g.period_end)) filter (where coalesce(g.tier, 0) > 0) as first_paid_at
+      from redemption_grant g
+      join "user" u on u.id = g.user_id
+      where nullif(trim(u.email), '') is not null
+      group by lower(trim(u.email))
+    ),
+    renew_events as (
+      select distinct
+        lower(trim(u.email)) as email_key,
+        rh.redeemed_at
+      from redemption_history rh
+      join "user" u on u.id = rh.user_id
+      left join redemption_code rc on rc.id = rh.code_id
+      where coalesce(rc.tier, 0) > 0
+        and nullif(trim(u.email), '') is not null
+    ),
+    renew_ranked as (
+      select
+        re.email_key,
+        re.redeemed_at,
+        row_number() over (
+          partition by re.email_key
+          order by re.redeemed_at asc
+        ) as rn
+      from renew_events re
+    ),
+    renew_stats as (
+      select
+        email_key,
+        min(redeemed_at) filter (where rn = 2) as second_paid_at
+      from renew_ranked
+      group by email_key
+    )${boundsCte},
     chat_stats as (
       select
         t.user_id,
@@ -1341,6 +1527,9 @@ async function queryUsers() {
       up.gender,
       cs.thread_count,
       cs.last_active_at,
+      fum.first_user_message_at,
+      ps.first_paid_at,
+      rs.second_paid_at,
       lt.latest_conversation_id,
       coalesce(lg.status, 'inactive') as membership_status,
       coalesce(lg.tier, 0) as membership_tier,
@@ -1350,15 +1539,19 @@ async function queryUsers() {
         else 0
       end as remaining_ai_chat_count
     from "user" u
+    ${boundsJoin}
     left join user_profile up on up.user_id = u.id
     left join latest_grant lg on lg.user_id = u.id
     left join chat_stats cs on cs.user_id = u.id
+    left join first_user_message fum on fum.user_id = u.id
+    left join paid_stats ps on ps.email_key = lower(trim(u.email))
+    left join renew_stats rs on rs.email_key = lower(trim(u.email))
     left join latest_thread lt on lt.user_id = u.id
+    ${whereClause}
     order by u.created_at desc
     limit 5000;
   `;
-
-  const result = await pool.query(sql);
+  const result = await pool.query(sql, queryParams);
 
   const toNameParts = (name, email, userId) => {
     const fallback = email && email.includes('@') ? email.split('@')[0] : `user_${(userId || '').slice(-6)}`;
@@ -1467,10 +1660,49 @@ async function queryUsers() {
       totalChatCount: Number(r.thread_count || 0),
       remainingAiChatCount,
       lastActiveAt,
+      firstConversationAt: r.first_user_message_at || null,
+      firstPaidAt: r.first_paid_at || null,
+      secondPaidAt: r.second_paid_at || null,
     };
   });
 
-  return { total: rows.length, rows };
+  let filtered = rows;
+
+  if (nicknameKeyword) {
+    filtered = filtered.filter((row) => {
+      const nickname = String(row.nickname || "").toLowerCase();
+      const username = String(row.username || "").toLowerCase();
+      const email = String(row.email || "").toLowerCase();
+      return nickname.includes(nicknameKeyword) || username.includes(nicknameKeyword) || email.includes(nicknameKeyword);
+    });
+  }
+
+  if (subscriptionStatusFilter.length > 0) {
+    const allow = new Set(subscriptionStatusFilter);
+    filtered = filtered.filter((row) => allow.has(String(row.subscriptionStatus || "免费版")));
+  }
+
+  if (subscriptionExpiredFilter.length > 0) {
+    const allow = new Set(subscriptionExpiredFilter);
+    filtered = filtered.filter((row) => allow.has(String(row.subscriptionExpired || "")));
+  }
+
+  return {
+    total: filtered.length,
+    rows: filtered.slice(offset, offset + pageSize),
+    page,
+    pageSize,
+    filters: {
+      funnelSegment: funnelSegment || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      nickname: nicknameKeyword || undefined,
+      subscriptionStatus: subscriptionStatusFilter,
+      subscriptionExpired: subscriptionExpiredFilter,
+      registerStartDate: registerStartDate || undefined,
+      registerEndDate: registerEndDate || undefined,
+    },
+  };
 }
 
 
@@ -1584,11 +1816,12 @@ async function handleApi(req, res, parsedUrl) {
 
   if (parsedUrl.pathname === "/api/users") {
     try {
-      const payload = await queryUsers();
+      const payload = await queryUsers(parsedUrl.query || {});
       return json(res, 200, payload);
     } catch (err) {
+      const statusCode = Number(err?.statusCode || 500);
       console.error("[users] query failed", err);
-      return json(res, 500, { error: "users_query_failed", message: err.message });
+      return json(res, statusCode, { error: "users_query_failed", message: err.message });
     }
   }
 
