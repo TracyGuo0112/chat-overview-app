@@ -9,13 +9,7 @@ import {
   Pin,
   RefreshCw,
 } from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -24,7 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   Conversation,
   ConversationContent,
@@ -40,6 +33,13 @@ import {
   MessageResponse,
   MessageToolbar,
 } from '@/components/ai-elements/message'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { TopNav } from '@/components/layout/top-nav'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 type ConversationMessage = {
   id: string
@@ -124,7 +124,11 @@ function formatMessageForDisplay(text: string) {
   }
 
   const buildMarkdownTable = (headers: string[], bodyRows: string[][]) => {
-    const colCount = Math.max(2, headers.length, ...bodyRows.map((x) => x.length))
+    const colCount = Math.max(
+      2,
+      headers.length,
+      ...bodyRows.map((x) => x.length)
+    )
     const safeHeaders = normalizeRowLength(
       headers.map((h, i) => h || `列${i + 1}`),
       colCount
@@ -185,12 +189,16 @@ function formatMessageForDisplay(text: string) {
     }
   }
 
-  const looksLikeAge = (value: string) => /^\(?\d{1,3}\s*[-~至]\s*\d{1,3}岁?\)?$/.test(value)
+  const looksLikeAge = (value: string) =>
+    /^\(?\d{1,3}\s*[-~至]\s*\d{1,3}岁?\)?$/.test(value)
 
   const looksLikeParen = (value: string) => /^[（(].+[）)]$/.test(value)
 
   const isLikelyRowLabel = (cells: string[]) =>
-    cells.length === 1 && cells[0].length > 0 && cells[0].length <= 8 && !isSepCell(cells[0])
+    cells.length === 1 &&
+    cells[0].length > 0 &&
+    cells[0].length <= 8 &&
+    !isSepCell(cells[0])
 
   const rebuildFourColRowsFromBlocks = (rawRows: string[][]) => {
     const labelIndexes = rawRows
@@ -203,7 +211,8 @@ function formatMessageForDisplay(text: string) {
 
     for (let i = 0; i < labelIndexes.length; i += 1) {
       const start = labelIndexes[i]
-      const end = i + 1 < labelIndexes.length ? labelIndexes[i + 1] : rawRows.length
+      const end =
+        i + 1 < labelIndexes.length ? labelIndexes[i + 1] : rawRows.length
 
       const label = rawRows[start][0]
       const fragments = rawRows
@@ -234,7 +243,11 @@ function formatMessageForDisplay(text: string) {
       const col2 = takeCol()
       let col3 = takeCol()
 
-      if (ptr < fragments.length && fragments[ptr].length <= 12 && !/[。！？:：]/.test(fragments[ptr])) {
+      if (
+        ptr < fragments.length &&
+        fragments[ptr].length <= 12 &&
+        !/[。！？:：]/.test(fragments[ptr])
+      ) {
         col3 = col3 ? `${col3} ${fragments[ptr]}` : fragments[ptr]
         ptr += 1
       }
@@ -247,7 +260,9 @@ function formatMessageForDisplay(text: string) {
   }
 
   const convertPipeGroup = (groupLines: string[]) => {
-    const rows = groupLines.map(splitPipeCells).filter((cells) => cells.length > 0)
+    const rows = groupLines
+      .map(splitPipeCells)
+      .filter((cells) => cells.length > 0)
     if (rows.length === 0) return ''
 
     const inline = extractMixedInlineTable(rows[0])
@@ -258,13 +273,18 @@ function formatMessageForDisplay(text: string) {
         if (!rows[i].every((c) => isSepCell(c))) tokens.push(...rows[i])
       }
       const bodyRows = chunkTokensToRows(tokens, colCount)
-      const prefix = inline.prefixRows.length ? `${rowsToBullets(inline.prefixRows)}\n` : ''
+      const prefix = inline.prefixRows.length
+        ? `${rowsToBullets(inline.prefixRows)}\n`
+        : ''
       return `${prefix}${buildMarkdownTable(inline.headers, bodyRows)}`.trim()
     }
 
     let headerIndex = -1
     for (let i = 0; i < rows.length - 1; i += 1) {
-      if (!rows[i].every((c) => isSepCell(c)) && rows[i + 1].every((c) => isSepCell(c))) {
+      if (
+        !rows[i].every((c) => isSepCell(c)) &&
+        rows[i + 1].every((c) => isSepCell(c))
+      ) {
         headerIndex = i
         break
       }
@@ -290,7 +310,8 @@ function formatMessageForDisplay(text: string) {
         bodyRows = chunkTokensToRows(rawBodyRows.flat(), colCount)
       }
 
-      const prefix = headerIndex > 0 ? `${rowsToBullets(rows.slice(0, headerIndex))}\n` : ''
+      const prefix =
+        headerIndex > 0 ? `${rowsToBullets(rows.slice(0, headerIndex))}\n` : ''
       return `${prefix}${buildMarkdownTable(headers, bodyRows)}`.trim()
     }
 
@@ -299,7 +320,10 @@ function formatMessageForDisplay(text: string) {
       const headers = rows[0]
       const colCount = Math.max(2, headers.length)
       const bodyTokens = rows.slice(1).flat()
-      return buildMarkdownTable(headers, chunkTokensToRows(bodyTokens, colCount))
+      return buildMarkdownTable(
+        headers,
+        chunkTokensToRows(bodyTokens, colCount)
+      )
     }
 
     return rowsToBullets(rows)
@@ -344,7 +368,9 @@ function formatMessageForDisplay(text: string) {
   )
     .split('\n')
     .map((line) => line.replace(/^[\u3000\s]+/, ''))
-    .map((line) => line.replace(/^([一二三四五六七八九十]+[、.．]\s*.+)$/u, '## $1'))
+    .map((line) =>
+      line.replace(/^([一二三四五六七八九十]+[、.．]\s*.+)$/u, '## $1')
+    )
     .map((line) => line.replace(/^\|?(?:\s*\|)+\s*$/, ''))
     .join('\n')
 
@@ -353,12 +379,18 @@ function formatMessageForDisplay(text: string) {
 
 function roleBadgeClass(role: string) {
   if (role === 'user') return 'bg-blue-500/10 text-blue-700 border-blue-500/25'
-  if (role === 'assistant') return 'bg-violet-500/10 text-violet-700 border-violet-500/25'
-  if (role === 'system') return 'bg-amber-500/10 text-amber-700 border-amber-500/25'
+  if (role === 'assistant')
+    return 'bg-violet-500/10 text-violet-700 border-violet-500/25'
+  if (role === 'system')
+    return 'bg-amber-500/10 text-amber-700 border-amber-500/25'
   return 'bg-slate-500/10 text-slate-700 border-slate-500/25'
 }
 
-export function ConversationDetailPage({ conversationId }: { conversationId: string }) {
+export function ConversationDetailPage({
+  conversationId,
+}: {
+  conversationId: string
+}) {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -369,7 +401,9 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
     setLoading(true)
     setError('')
     try {
-      const resp = await fetch(`/api/conversation/${encodeURIComponent(conversationId)}`)
+      const resp = await fetch(
+        `/api/conversation/${encodeURIComponent(conversationId)}`
+      )
       const raw = await resp.text()
       const data = raw ? JSON.parse(raw) : null
       if (!resp.ok) {
@@ -454,14 +488,20 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
             </Button>
             <h1 className='text-2xl font-bold tracking-tight'>会话详情</h1>
           </div>
-          <Button variant='outline' className='gap-2' onClick={() => void loadDetail()}>
+          <Button
+            variant='outline'
+            className='gap-2'
+            onClick={() => void loadDetail()}
+          >
             <RefreshCw className='h-4 w-4' /> 刷新详情
           </Button>
         </div>
 
         {error && (
           <Card className='mb-4 border-red-300'>
-            <CardContent className='py-4 text-sm text-red-600'>{error}</CardContent>
+            <CardContent className='py-4 text-sm text-red-600'>
+              {error}
+            </CardContent>
           </Card>
         )}
 
@@ -470,10 +510,16 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
             <CardHeader className='space-y-3'>
               <div>
                 <CardTitle>消息记录</CardTitle>
-                <CardDescription>样式对齐 metasight：admin 紧凑排版 + 表格优先渲染</CardDescription>
+                <CardDescription>
+                  样式对齐 metasight：admin 紧凑排版 + 表格优先渲染
+                </CardDescription>
               </div>
               <div className='flex flex-wrap gap-2'>
-                <Button size='sm' variant='outline' onClick={() => scrollToMessage(0)}>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => scrollToMessage(0)}
+                >
                   <ArrowUp className='mr-1 h-4 w-4' /> 第一条
                 </Button>
                 <Button
@@ -515,7 +561,9 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
                     />
                   )}
 
-                  {loading && <p className='text-muted-foreground text-sm'>加载中...</p>}
+                  {loading && (
+                    <p className='text-sm text-muted-foreground'>加载中...</p>
+                  )}
 
                   {messages.map((msg, index) => {
                     const role = normalizedRole(msg.role)
@@ -528,23 +576,32 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
                       >
                         <MessageToolbar className='mt-0'>
                           <div className='flex items-center gap-2 text-xs'>
-                            <Badge variant='outline' className={roleBadgeClass(msg.role)}>
+                            <Badge
+                              variant='outline'
+                              className={roleBadgeClass(msg.role)}
+                            >
                               {roleLabel(msg.role)}
                             </Badge>
                             {msg.feedback ? (
-                              <Badge variant='secondary'>反馈：{msg.feedback}</Badge>
+                              <Badge variant='secondary'>
+                                反馈：{msg.feedback}
+                              </Badge>
                             ) : null}
-                            <span className='text-muted-foreground'>#{index + 1}</span>
+                            <span className='text-muted-foreground'>
+                              #{index + 1}
+                            </span>
                           </div>
 
                           <MessageActions>
-                            <span className='text-muted-foreground text-xs'>
+                            <span className='text-xs text-muted-foreground'>
                               {fmtTime(msg.createdAt)}
                             </span>
                             <MessageAction
                               tooltip='复制消息'
                               label='复制消息'
-                              onClick={() => void copyText(msg.id, msg.text || '')}
+                              onClick={() =>
+                                void copyText(msg.id, msg.text || '')
+                              }
                             >
                               <Copy className='h-4 w-4' />
                             </MessageAction>
@@ -552,13 +609,17 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
                         </MessageToolbar>
 
                         <MessageContent className='max-w-[100ch]'>
-                          <MessageResponse className={responseTypographyClass(msg.role)}>
+                          <MessageResponse
+                            className={responseTypographyClass(msg.role)}
+                          >
                             {formatMessageForDisplay(msg.text || '(空消息)')}
                           </MessageResponse>
                         </MessageContent>
 
                         {copiedId === msg.id ? (
-                          <p className='text-muted-foreground text-xs'>已复制</p>
+                          <p className='text-xs text-muted-foreground'>
+                            已复制
+                          </p>
                         ) : null}
                       </Message>
                     )
@@ -578,7 +639,9 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
                 会话信息
-                {detail?.important ? <Pin className='h-4 w-4 text-yellow-500' /> : null}
+                {detail?.important ? (
+                  <Pin className='h-4 w-4 text-yellow-500' />
+                ) : null}
               </CardTitle>
               <CardDescription className='break-all'>
                 会话ID：{detail?.conversationId ?? conversationId}
@@ -586,31 +649,39 @@ export function ConversationDetailPage({ conversationId }: { conversationId: str
             </CardHeader>
             <CardContent className='space-y-4'>
               <div>
-                <p className='text-muted-foreground text-xs'>客户</p>
+                <p className='text-xs text-muted-foreground'>客户</p>
                 <p className='font-medium'>{detail?.nickname ?? '-'}</p>
-                <p className='text-muted-foreground text-xs'>{detail?.emailMasked ?? '-'}</p>
+                <p className='text-xs text-muted-foreground'>
+                  {detail?.emailMasked ?? '-'}
+                </p>
               </div>
 
               <div>
-                <p className='text-muted-foreground text-xs'>客户ID</p>
-                <p className='font-medium break-all'>{detail?.customerId ?? '-'}</p>
+                <p className='text-xs text-muted-foreground'>客户ID</p>
+                <p className='font-medium break-all'>
+                  {detail?.customerId ?? '-'}
+                </p>
               </div>
 
               <div>
-                <p className='text-muted-foreground text-xs'>会员状态</p>
+                <p className='text-xs text-muted-foreground'>会员状态</p>
                 <div className='mt-1 flex flex-wrap items-center gap-2'>
-                  <Badge variant='outline'>{detail?.membershipLevel ?? '-'}</Badge>
-                  <Badge variant={detail?.isSubscribed ? 'default' : 'secondary'}>
+                  <Badge variant='outline'>
+                    {detail?.membershipLevel ?? '-'}
+                  </Badge>
+                  <Badge
+                    variant={detail?.isSubscribed ? 'default' : 'secondary'}
+                  >
                     {detail?.isSubscribed ? '已订阅' : '未订阅'}
                   </Badge>
                 </div>
-                <p className='text-muted-foreground mt-1 text-xs'>
+                <p className='mt-1 text-xs text-muted-foreground'>
                   剩余AI对话：{Number(detail?.remainingAiChatCount ?? 0)}
                 </p>
               </div>
 
               <div>
-                <p className='text-muted-foreground text-xs'>时间与规模</p>
+                <p className='text-xs text-muted-foreground'>时间与规模</p>
                 <p className='text-sm'>创建：{fmtTime(detail?.createdAt)}</p>
                 <p className='text-sm'>活跃：{fmtTime(detail?.lastActiveAt)}</p>
                 <p className='text-sm'>消息：{messageCount}</p>

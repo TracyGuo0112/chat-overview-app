@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import {
-  AlertTriangle,
-  RefreshCw,
-  Star,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { AlertTriangle, RefreshCw, Star } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -15,7 +12,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -96,7 +92,10 @@ export function Dashboard() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
 
   const selectedIds = useMemo(
-    () => Object.entries(selected).filter(([, v]) => v).map(([id]) => id),
+    () =>
+      Object.entries(selected)
+        .filter(([, v]) => v)
+        .map(([id]) => id),
     [selected]
   )
 
@@ -117,7 +116,9 @@ export function Dashboard() {
       })
       const resp = await fetch(`/api/overview?${qs.toString()}`)
       const raw = await resp.text()
-      let data: (Partial<OverviewPayload> & { error?: string; message?: string }) | null = null
+      let data:
+        | (Partial<OverviewPayload> & { error?: string; message?: string })
+        | null = null
 
       if (raw.trim()) {
         try {
@@ -139,17 +140,24 @@ export function Dashboard() {
         totalChatCount: Number(
           (row as Partial<OverviewRow> & { total_chat_count?: number | string })
             .totalChatCount ??
-            (row as Partial<OverviewRow> & { total_chat_count?: number | string })
-              .total_chat_count ??
+            (
+              row as Partial<OverviewRow> & {
+                total_chat_count?: number | string
+              }
+            ).total_chat_count ??
             0
         ),
         remainingAiChatCount: Number(
-          (row as Partial<OverviewRow> & {
-            remaining_ai_chat_count?: number | string
-          }).remainingAiChatCount ??
-            (row as Partial<OverviewRow> & {
+          (
+            row as Partial<OverviewRow> & {
               remaining_ai_chat_count?: number | string
-            }).remaining_ai_chat_count ??
+            }
+          ).remainingAiChatCount ??
+            (
+              row as Partial<OverviewRow> & {
+                remaining_ai_chat_count?: number | string
+              }
+            ).remaining_ai_chat_count ??
             0
         ),
       }))
@@ -199,21 +207,24 @@ export function Dashboard() {
     window.alert(`${label}: ${selectedIds.length} 条（下一步可接真实接口）`)
   }
 
-
-
   const customerInitial = (row: OverviewRow) => {
     const source = (row.nickname || row.customerId || '?').trim()
     return source.charAt(0).toUpperCase()
   }
 
   const membershipBadgeClass = (level: OverviewRow['membershipLevel']) => {
-    if (level === '洞见版') return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-    if (level === '烛照版') return 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30'
-    if (level === '微光版') return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
+    if (level === '洞见版')
+      return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+    if (level === '烛照版')
+      return 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30'
+    if (level === '微光版')
+      return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
     return 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/25'
   }
 
-  const remainingBadgeVariant = (remaining: number): 'outline' | 'secondary' | 'destructive' => {
+  const remainingBadgeVariant = (
+    remaining: number
+  ): 'outline' | 'secondary' | 'destructive' => {
     if (remaining <= 3) return 'destructive'
     if (remaining <= 10) return 'secondary'
     return 'outline'
@@ -254,8 +265,9 @@ export function Dashboard() {
         <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight'>会话总览</h1>
-            <p className='text-muted-foreground text-sm'>
-              运营 10 秒查看最新会话（展示最新 10-15 条），支持快速筛选与批量处理
+            <p className='text-sm text-muted-foreground'>
+              运营 10 秒查看最新会话（展示最新 10-15
+              条），支持快速筛选与批量处理
             </p>
           </div>
           <Button
@@ -394,7 +406,7 @@ export function Dashboard() {
               {selectedIds.length > 0 ? ` 已选 ${selectedIds.length} 条` : ''}
             </CardDescription>
             {error && (
-              <p className='text-destructive flex items-center gap-2 text-sm'>
+              <p className='flex items-center gap-2 text-sm text-destructive'>
                 <AlertTriangle className='h-4 w-4' />
                 {error}
               </p>
@@ -445,33 +457,52 @@ export function Dashboard() {
                         className={`h-4 w-4 ${row.important ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground'}`}
                       />
                     </TableCell>
-                    <TableCell className='font-medium' title={row.conversationId}>{shortConversationId(row.conversationId)}</TableCell>
+                    <TableCell
+                      className='font-medium'
+                      title={row.conversationId}
+                    >
+                      {shortConversationId(row.conversationId)}
+                    </TableCell>
                     <TableCell>
                       <div className='flex items-center gap-3'>
                         <Avatar className='h-9 w-9'>
-                          <AvatarFallback>{customerInitial(row)}</AvatarFallback>
+                          <AvatarFallback>
+                            {customerInitial(row)}
+                          </AvatarFallback>
                         </Avatar>
                         <div className='min-w-0'>
                           <div className='truncate font-medium'>
                             {row.nickname || '未知用户'}
                           </div>
-                          <div className='text-muted-foreground truncate text-xs'>
+                          <div className='truncate text-xs text-muted-foreground'>
                             {row.emailMasked || '-'}
                           </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className='max-w-96 truncate' title={row.lastMessage}>
+                    <TableCell
+                      className='max-w-96 truncate'
+                      title={row.lastMessage}
+                    >
                       {row.lastMessage || '-'}
                     </TableCell>
                     <TableCell>{fmtTime(row.lastActiveAt)}</TableCell>
                     <TableCell>
                       <div className='flex flex-wrap items-center gap-1'>
-                        <Badge variant='outline' className={membershipBadgeClass(row.membershipLevel)}>
+                        <Badge
+                          variant='outline'
+                          className={membershipBadgeClass(row.membershipLevel)}
+                        >
                           {row.membershipLevel}
                         </Badge>
-                        <Badge variant='outline'>已对话 {row.totalChatCount}</Badge>
-                        <Badge variant={remainingBadgeVariant(row.remainingAiChatCount)}>
+                        <Badge variant='outline'>
+                          已对话 {row.totalChatCount}
+                        </Badge>
+                        <Badge
+                          variant={remainingBadgeVariant(
+                            row.remainingAiChatCount
+                          )}
+                        >
                           剩余 {row.remainingAiChatCount}
                         </Badge>
                       </div>
@@ -495,12 +526,12 @@ export function Dashboard() {
               </TableBody>
             </Table>
             {!loading && rows.length === 0 && (
-              <p className='text-muted-foreground py-6 text-center text-sm'>
+              <p className='py-6 text-center text-sm text-muted-foreground'>
                 当前筛选无数据
               </p>
             )}
             {loading && (
-              <p className='text-muted-foreground py-6 text-center text-sm'>
+              <p className='py-6 text-center text-sm text-muted-foreground'>
                 数据加载中...
               </p>
             )}

@@ -1,5 +1,19 @@
 import { useMemo, useState } from 'react'
 import { Copy, Database, Send, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+  MessageToolbar,
+} from '@/components/ai-elements/message'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -7,11 +21,6 @@ import { TopNav } from '@/components/layout/top-nav'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation'
-import { Message, MessageContent, MessageResponse, MessageToolbar } from '@/components/ai-elements/message'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
 
 interface DbChatResponse {
   answer: string
@@ -55,7 +64,10 @@ export function DataChat() {
     { id: nextId(), role: 'assistant', content: initialAssistantMessage },
   ])
 
-  const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading])
+  const canSend = useMemo(
+    () => input.trim().length > 0 && !loading,
+    [input, loading]
+  )
 
   const appendMessage = (message: ChatMessage) => {
     setMessages((prev) => [...prev, message])
@@ -84,7 +96,9 @@ export function DataChat() {
 
       if (!resp.ok) {
         if (resp.status === 404) {
-          throw new Error('接口不存在（/api/db-chat）。请在 /Users/lisa/AI/chat-overview-app 运行 npm run dev 重启后端。')
+          throw new Error(
+            '接口不存在（/api/db-chat）。请在 /Users/lisa/AI/chat-overview-app 运行 npm run dev 重启后端。'
+          )
         }
         throw new Error(payload?.answer || `请求失败（HTTP ${resp.status}）`)
       }
@@ -130,7 +144,9 @@ export function DataChat() {
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>数据问答</h2>
-            <p className='text-muted-foreground'>像 GPT 一样对话查询数据库（只读）。</p>
+            <p className='text-muted-foreground'>
+              像 GPT 一样对话查询数据库（只读）。
+            </p>
           </div>
         </div>
 
@@ -147,7 +163,13 @@ export function DataChat() {
               <ConversationContent className='gap-5 px-6 py-5'>
                 {messages.map((msg) => (
                   <Message key={msg.id} from={msg.role}>
-                    <MessageContent className={msg.role === 'assistant' ? 'w-full max-w-full' : undefined}>
+                    <MessageContent
+                      className={
+                        msg.role === 'assistant'
+                          ? 'w-full max-w-full'
+                          : undefined
+                      }
+                    >
                       {msg.role === 'assistant' ? (
                         <MessageResponse>{msg.content}</MessageResponse>
                       ) : (
@@ -156,9 +178,13 @@ export function DataChat() {
 
                       {msg.role === 'assistant' && msg.sql ? (
                         <MessageToolbar className='mt-2'>
-                          <details className='text-muted-foreground w-full rounded-md border p-2 text-xs'>
-                            <summary className='cursor-pointer font-medium'>查看执行 SQL</summary>
-                            <pre className='mt-2 overflow-x-auto whitespace-pre-wrap break-words'>{msg.sql}</pre>
+                          <details className='w-full rounded-md border p-2 text-xs text-muted-foreground'>
+                            <summary className='cursor-pointer font-medium'>
+                              查看执行 SQL
+                            </summary>
+                            <pre className='mt-2 overflow-x-auto break-words whitespace-pre-wrap'>
+                              {msg.sql}
+                            </pre>
                           </details>
                           <Button
                             type='button'
@@ -178,7 +204,7 @@ export function DataChat() {
                 {loading ? (
                   <Message from='assistant'>
                     <MessageContent>
-                      <div className='text-muted-foreground flex items-center gap-2'>
+                      <div className='flex items-center gap-2 text-muted-foreground'>
                         <Sparkles className='size-4 animate-pulse' />
                         正在查询数据库...
                       </div>

@@ -16,13 +16,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -40,6 +33,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { TopNav } from '@/components/layout/top-nav'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 type FunnelPayload = {
   visitors: number | null
@@ -109,12 +109,14 @@ function calcPresetRange(preset: '7d' | '30d' | '90d', endDate: string) {
 }
 
 function formatPercent(value: number | null | undefined) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return '--'
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return '--'
   return `${value.toFixed(2)}%`
 }
 
 function formatNumber(value: number | null | undefined) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return '--'
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return '--'
   return Number(value).toLocaleString('zh-CN')
 }
 
@@ -132,7 +134,10 @@ export function MembershipOps() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const loadData = async (nextRange?: { startDate: string; endDate: string }) => {
+  const loadData = async (nextRange?: {
+    startDate: string
+    endDate: string
+  }) => {
     setLoading(true)
     setError('')
 
@@ -145,7 +150,9 @@ export function MembershipOps() {
         qs.set('endDate', endDate)
       }
 
-      const url = qs.toString() ? `/api/membership-ops?${qs.toString()}` : '/api/membership-ops'
+      const url = qs.toString()
+        ? `/api/membership-ops?${qs.toString()}`
+        : '/api/membership-ops'
       const resp = await fetch(url)
       const raw = await resp.text()
       let payload: MembershipOpsPayload | null = null
@@ -159,7 +166,8 @@ export function MembershipOps() {
       }
 
       if (!resp.ok) {
-        const message = (payload as unknown as { message?: string } | null)?.message
+        const message = (payload as unknown as { message?: string } | null)
+          ?.message
         throw new Error(message || `请求失败（HTTP ${resp.status}）`)
       }
       if (!payload) {
@@ -241,7 +249,11 @@ export function MembershipOps() {
               转化漏斗（游客→注册→订阅→续费）与会员分档对比（咨询频次、额度风险）。
             </p>
           </div>
-          <Button variant='outline' className='gap-2' onClick={() => void loadData()}>
+          <Button
+            variant='outline'
+            className='gap-2'
+            onClick={() => void loadData()}
+          >
             <RefreshCw className='h-4 w-4' />
             刷新数据
           </Button>
@@ -251,7 +263,8 @@ export function MembershipOps() {
           <CardHeader>
             <CardTitle>时间筛选</CardTitle>
             <CardDescription>
-              时区：{data?.range.timezone || 'Asia/Shanghai'}。游客按 PostHog 的 $pageview（distinct_id 去重）统计。
+              时区：{data?.range.timezone || 'Asia/Shanghai'}。游客按 PostHog 的
+              $pageview（distinct_id 去重）统计。
             </CardDescription>
           </CardHeader>
           <CardContent className='grid gap-3 md:grid-cols-4'>
@@ -292,7 +305,12 @@ export function MembershipOps() {
               </Button>
             </div>
             <Button
-              onClick={() => void loadData({ startDate: draftStartDate, endDate: draftEndDate })}
+              onClick={() =>
+                void loadData({
+                  startDate: draftStartDate,
+                  endDate: draftEndDate,
+                })
+              }
               disabled={!draftStartDate || !draftEndDate}
             >
               应用筛选
@@ -300,14 +318,20 @@ export function MembershipOps() {
           </CardContent>
         </Card>
 
-        {error ? <p className='text-destructive text-sm'>{error}</p> : null}
-        {loading ? <p className='text-muted-foreground text-sm'>正在加载会员运营分析...</p> : null}
+        {error ? <p className='text-sm text-destructive'>{error}</p> : null}
+        {loading ? (
+          <p className='text-sm text-muted-foreground'>
+            正在加载会员运营分析...
+          </p>
+        ) : null}
 
         <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
           <Card>
             <CardHeader className='pb-2'>
               <CardDescription>游客（访问）</CardDescription>
-              <CardTitle className='text-2xl'>{formatNumber(data?.funnel.visitors)}</CardTitle>
+              <CardTitle className='text-2xl'>
+                {formatNumber(data?.funnel.visitors)}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
@@ -316,7 +340,9 @@ export function MembershipOps() {
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.registered)}
               </CardTitle>
-              <CardDescription>{formatPercent(data?.funnel.conversion.visitToRegister)}</CardDescription>
+              <CardDescription>
+                {formatPercent(data?.funnel.conversion.visitToRegister)}
+              </CardDescription>
             </CardHeader>
           </Card>
           <Card>
@@ -325,7 +351,9 @@ export function MembershipOps() {
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.subscribed)}
               </CardTitle>
-              <CardDescription>{formatPercent(data?.funnel.conversion.registerToSubscribe)}</CardDescription>
+              <CardDescription>
+                {formatPercent(data?.funnel.conversion.registerToSubscribe)}
+              </CardDescription>
             </CardHeader>
           </Card>
           <Card>
@@ -334,7 +362,9 @@ export function MembershipOps() {
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.renewed)}
               </CardTitle>
-              <CardDescription>{formatPercent(data?.funnel.conversion.subscribeToRenew)}</CardDescription>
+              <CardDescription>
+                {formatPercent(data?.funnel.conversion.subscribeToRenew)}
+              </CardDescription>
             </CardHeader>
           </Card>
         </div>
@@ -344,21 +374,29 @@ export function MembershipOps() {
             <CardHeader>
               <CardTitle>转化漏斗</CardTitle>
               <CardDescription>
-                游客 → 注册 → 订阅 → 初次续费（同邮箱去重，按第2次付费时间计入）。
+                游客 → 注册 → 订阅 →
+                初次续费（同邮箱去重，按第2次付费时间计入）。
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className='h-[320px]'>
                 <ResponsiveContainer width='100%' height='100%'>
                   <FunnelChart>
-                    <Tooltip formatter={(value) => formatNumber(Number(value))} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(Number(value))}
+                    />
                     <Funnel data={funnelData} dataKey='value' isAnimationActive>
-                      <LabelList position='right' dataKey='label' fill='currentColor' stroke='none' />
+                      <LabelList
+                        position='right'
+                        dataKey='label'
+                        fill='currentColor'
+                        stroke='none'
+                      />
                     </Funnel>
                   </FunnelChart>
                 </ResponsiveContainer>
               </div>
-              <p className='text-muted-foreground mt-2 text-xs'>
+              <p className='mt-2 text-xs text-muted-foreground'>
                 游客来源：{data?.funnel.visitorSource.message || '-'}
               </p>
             </CardContent>
@@ -367,7 +405,9 @@ export function MembershipOps() {
           <Card>
             <CardHeader>
               <CardTitle>分档咨询频次</CardTitle>
-              <CardDescription>按消息发生时档位归因：人均用户消息轮数 + 中位数（P50）。</CardDescription>
+              <CardDescription>
+                按消息发生时档位归因：人均用户消息轮数 + 中位数（P50）。
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className='h-[320px]'>
@@ -378,12 +418,24 @@ export function MembershipOps() {
                     <YAxis allowDecimals />
                     <Tooltip formatter={(value) => Number(value).toFixed(2)} />
                     <Legend />
-                    <Bar dataKey='avgTurns' name='人均轮数' radius={[6, 6, 0, 0]}>
+                    <Bar
+                      dataKey='avgTurns'
+                      name='人均轮数'
+                      radius={[6, 6, 0, 0]}
+                    >
                       {tierBarData.map((entry) => (
-                        <Cell key={`avg-turns-${entry.tier}`} fill={entry.fill} />
+                        <Cell
+                          key={`avg-turns-${entry.tier}`}
+                          fill={entry.fill}
+                        />
                       ))}
                     </Bar>
-                    <Bar dataKey='p50Turns' name='中位数(P50)' fill='#ef4444' radius={[6, 6, 0, 0]} />
+                    <Bar
+                      dataKey='p50Turns'
+                      name='中位数(P50)'
+                      fill='#ef4444'
+                      radius={[6, 6, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -394,7 +446,9 @@ export function MembershipOps() {
         <Card>
           <CardHeader>
             <CardTitle>转化趋势（按天）</CardTitle>
-            <CardDescription>展示注册、订阅、续费人数的每日趋势。</CardDescription>
+            <CardDescription>
+              展示注册、订阅、续费人数的每日趋势。
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className='h-[340px]'>
@@ -405,9 +459,30 @@ export function MembershipOps() {
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Line type='monotone' dataKey='registered' name='注册' stroke='#64748b' strokeWidth={2} dot={false} />
-                  <Line type='monotone' dataKey='subscribed' name='订阅' stroke='#3b82f6' strokeWidth={2} dot={false} />
-                  <Line type='monotone' dataKey='renewed' name='续费' stroke='#ef4444' strokeWidth={2} dot={false} />
+                  <Line
+                    type='monotone'
+                    dataKey='registered'
+                    name='注册'
+                    stroke='#64748b'
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type='monotone'
+                    dataKey='subscribed'
+                    name='订阅'
+                    stroke='#3b82f6'
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type='monotone'
+                    dataKey='renewed'
+                    name='续费'
+                    stroke='#ef4444'
+                    strokeWidth={2}
+                    dot={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -417,7 +492,9 @@ export function MembershipOps() {
         <Card>
           <CardHeader>
             <CardTitle>分档明细表</CardTitle>
-            <CardDescription>咨询频次按消息发生时会员档位归因（同一用户跨档会拆分到不同档位）。</CardDescription>
+            <CardDescription>
+              咨询频次按消息发生时会员档位归因（同一用户跨档会拆分到不同档位）。
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -425,25 +502,45 @@ export function MembershipOps() {
                 <TableRow>
                   <TableHead>会员档位</TableHead>
                   <TableHead className='text-right'>总用户数</TableHead>
-                  <TableHead className='text-right'>用户消息轮数（总）</TableHead>
+                  <TableHead className='text-right'>
+                    用户消息轮数（总）
+                  </TableHead>
                   <TableHead className='text-right'>人均用户消息轮数</TableHead>
                   <TableHead className='text-right'>中位数（P50）</TableHead>
-                  <TableHead className='text-right'>低剩余额度用户数（≤3）</TableHead>
+                  <TableHead className='text-right'>
+                    低剩余额度用户数（≤3）
+                  </TableHead>
                   <TableHead className='text-right'>低剩余额度占比</TableHead>
-                  <TableHead className='text-right'>已用完用户数（=0）</TableHead>
+                  <TableHead className='text-right'>
+                    已用完用户数（=0）
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(data?.tierComparison || []).map((row) => (
                   <TableRow key={row.tier}>
                     <TableCell className='font-medium'>{row.tier}</TableCell>
-                    <TableCell className='text-right'>{formatNumber(row.totalUsers)}</TableCell>
-                    <TableCell className='text-right'>{formatNumber(row.totalUserTurns)}</TableCell>
-                    <TableCell className='text-right'>{row.avgUserTurnsPerUser.toFixed(2)}</TableCell>
-                    <TableCell className='text-right'>{row.p50UserTurnsPerUser.toFixed(2)}</TableCell>
-                    <TableCell className='text-right'>{formatNumber(row.lowRemainingUsers)}</TableCell>
-                    <TableCell className='text-right'>{formatPercent(row.lowRemainingRate)}</TableCell>
-                    <TableCell className='text-right'>{formatNumber(row.exhaustedUsers)}</TableCell>
+                    <TableCell className='text-right'>
+                      {formatNumber(row.totalUsers)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatNumber(row.totalUserTurns)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {row.avgUserTurnsPerUser.toFixed(2)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {row.p50UserTurnsPerUser.toFixed(2)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatNumber(row.lowRemainingUsers)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatPercent(row.lowRemainingRate)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatNumber(row.exhaustedUsers)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

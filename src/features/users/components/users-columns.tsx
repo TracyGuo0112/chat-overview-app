@@ -80,7 +80,13 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'nickname',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='昵称' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='昵称'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => (
       <LongText className='mx-auto max-w-40 text-center md:max-w-56'>
         {row.original.nickname || row.original.username || '-'}
@@ -99,7 +105,13 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'email',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='邮箱' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='邮箱'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => (
       <LongText className='mx-auto max-w-56 text-center md:max-w-72'>
         {String(row.getValue('email') || '-')}
@@ -114,9 +126,17 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='注册时间' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='注册时间'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => (
-      <div className='text-center text-nowrap'>{formatDateTime(row.getValue('createdAt'))}</div>
+      <div className='text-center text-nowrap'>
+        {formatDateTime(row.getValue('createdAt'))}
+      </div>
     ),
     meta: {
       thClassName: 'px-4 text-center align-middle',
@@ -131,8 +151,16 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'gender',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='性别' className='justify-center' />,
-    cell: ({ row }) => <div className='text-center'>{row.original.gender || '-'}</div>,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='性别'
+        className='justify-center'
+      />
+    ),
+    cell: ({ row }) => (
+      <div className='text-center'>{row.original.gender || '-'}</div>
+    ),
     meta: {
       thClassName: 'px-4 text-center align-middle',
       tdClassName: 'px-4 text-center align-middle',
@@ -142,10 +170,18 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'userAge',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='用户年龄' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='用户年龄'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => {
       const age = row.original.userAge
-      return <div className='text-center'>{typeof age === 'number' ? age : '-'}</div>
+      return (
+        <div className='text-center'>{typeof age === 'number' ? age : '-'}</div>
+      )
     },
     meta: {
       thClassName: 'px-4 text-center align-middle',
@@ -162,7 +198,13 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'subscriptionStatus',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='订阅状态' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='订阅状态'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => {
       const label = row.original.subscriptionStatus || '免费版'
       return (
@@ -185,7 +227,13 @@ export const usersColumns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'subscriptionExpired',
-    header: ({ column }) => <DataTableColumnHeader column={column} title='状态' className='justify-center' />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title='状态'
+        className='justify-center'
+      />
+    ),
     cell: ({ row }) => {
       const label = row.original.subscriptionExpired || '已用完'
       return (

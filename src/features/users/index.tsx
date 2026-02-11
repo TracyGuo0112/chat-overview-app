@@ -34,7 +34,10 @@ export function Users() {
         const resp = await fetch('/api/users')
         const payload = (await resp.json()) as UsersApiPayload
         if (!resp.ok) {
-          throw new Error((payload as { message?: string })?.message || `请求失败（HTTP ${resp.status}）`)
+          throw new Error(
+            (payload as { message?: string })?.message ||
+              `请求失败（HTTP ${resp.status}）`
+          )
         }
         setUsers(Array.isArray(payload?.rows) ? payload.rows : [])
       } catch (err) {
@@ -63,13 +66,17 @@ export function Users() {
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>用户管理</h2>
-            <p className='text-muted-foreground'>查看数据库中的真实用户信息与账户状态。</p>
+            <p className='text-muted-foreground'>
+              查看数据库中的真实用户信息与账户状态。
+            </p>
           </div>
           <UsersPrimaryButtons />
         </div>
 
         {error ? <p className='text-sm text-red-600'>{error}</p> : null}
-        {loading ? <p className='text-sm text-muted-foreground'>正在加载用户数据...</p> : null}
+        {loading ? (
+          <p className='text-sm text-muted-foreground'>正在加载用户数据...</p>
+        ) : null}
 
         <UsersTable data={users} search={search} navigate={navigate} />
       </Main>

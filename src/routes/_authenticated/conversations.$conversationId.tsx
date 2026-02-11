@@ -6,6 +6,8 @@ function RouteComponent() {
   return <ConversationDetailPage conversationId={conversationId} />
 }
 
-export const Route = createFileRoute('/_authenticated/conversations/$conversationId')({
+export const Route = createFileRoute(
+  '/_authenticated/conversations/$conversationId'
+)({
   component: RouteComponent,
 })

@@ -58,8 +58,16 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     globalFilter: { enabled: false },
     columnFilters: [
       { columnId: 'nickname', searchKey: 'nickname', type: 'string' },
-      { columnId: 'subscriptionStatus', searchKey: 'subscriptionStatus', type: 'array' },
-      { columnId: 'subscriptionExpired', searchKey: 'subscriptionExpired', type: 'array' },
+      {
+        columnId: 'subscriptionStatus',
+        searchKey: 'subscriptionStatus',
+        type: 'array',
+      },
+      {
+        columnId: 'subscriptionExpired',
+        searchKey: 'subscriptionExpired',
+        type: 'array',
+      },
     ],
   })
 
