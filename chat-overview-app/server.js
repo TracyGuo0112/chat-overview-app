@@ -951,6 +951,8 @@ async function queryMembershipOps(params) {
 }
 
 async function queryOverview(params) {
+  const customerIdFilter = typeof params.customerId === "string" ? params.customerId.trim() : "";
+  const hasCustomerIdFilter = Boolean(customerIdFilter);
   const sql = `
     with latest_msg as (
       select distinct on (m.thread_id)
@@ -1008,11 +1010,13 @@ async function queryOverview(params) {
     left join latest_msg lm on lm.thread_id = t.id
     left join latest_grant lg on lg.user_id = t.user_id
     left join user_message_count umc on umc.user_id = t.user_id
+    ${hasCustomerIdFilter ? "where t.user_id = $3" : ""}
     order by t.updated_at desc nulls last
-    limit 600;
+    limit ${hasCustomerIdFilter ? 5000 : 600};
   `;
 
-  const result = await pool.query(sql, ["inactive", 0]);
+  const queryParams = hasCustomerIdFilter ? ["inactive", 0, customerIdFilter] : ["inactive", 0];
+  const result = await pool.query(sql, queryParams);
 
   // Separate aggregate KPIs to avoid bias from only the latest conversation window.
   // Keep this fault-tolerant: if one KPI query fails, overview list still returns.
@@ -1061,7 +1065,9 @@ async function queryOverview(params) {
   const remainingFilter = params.remaining || "all";
   const q = (params.q || "").trim().toLowerCase();
   const offset = Number(params.offset || 0);
-  const limit = Math.min(Number(params.limit || 15), 50);
+  const maxLimit = hasCustomerIdFilter ? 5000 : 50;
+  const rawLimit = Number(params.limit || 15);
+  const limit = Math.min(Math.max(rawLimit, 1), maxLimit);
 
   const rows = result.rows.map((r) => {
     const latestText = extractText(r.last_message_parts);
