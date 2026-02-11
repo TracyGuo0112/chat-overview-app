@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, RefreshCw, Star } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -77,8 +77,13 @@ const defaultKpis: OverviewKpis = {
   currentSubscribedUsers: 0,
 }
 
+const route = getRouteApi('/_authenticated/')
+
 export function Dashboard() {
+  const search = route.useSearch()
+  const routeNavigate = route.useNavigate()
   const navigate = useNavigate()
+  const customerIdFilter = (search.customerId || '').trim()
   const [dateRange, setDateRange] = useState<DateRangeValue>('all')
   const [membership, setMembership] = useState<MembershipValue>('all')
   const [remaining, setRemaining] = useState<RemainingValue>('all')
@@ -106,14 +111,16 @@ export function Dashboard() {
     setLoading(true)
     setError('')
     try {
+      const requestedLimit = customerIdFilter ? '5000' : '15'
       const qs = new URLSearchParams({
-        limit: '15',
+        limit: requestedLimit,
         offset: '0',
         dateRange,
         membership,
         remaining,
         q: keyword,
       })
+      if (customerIdFilter) qs.set('customerId', customerIdFilter)
       const resp = await fetch(`/api/overview?${qs.toString()}`)
       const raw = await resp.text()
       let data:
@@ -183,7 +190,7 @@ export function Dashboard() {
       setCountdown(30)
     }, 300)
     return () => window.clearTimeout(t)
-  }, [dateRange, membership, remaining, keyword])
+  }, [dateRange, membership, remaining, keyword, customerIdFilter])
 
   useEffect(() => {
     void loadData()
@@ -375,6 +382,25 @@ export function Dashboard() {
             />
           </CardContent>
         </Card>
+        {customerIdFilter ? (
+          <div className='mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2'>
+            <Badge variant='outline'>
+              当前仅查看用户 {customerIdFilter} 的全部历史会话
+            </Badge>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() =>
+                routeNavigate({
+                  to: '/',
+                  search: () => ({ customerId: undefined }),
+                })
+              }
+            >
+              返回全部会话
+            </Button>
+          </div>
+        ) : null}
 
         <Card>
           <CardHeader className='gap-3'>

@@ -169,20 +169,15 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                   className='group/row cursor-pointer'
-                  title='点击查看该用户最近会话记录'
+                  title='点击查看该用户全部历史会话记录'
                   onClick={(event) => {
                     const target = event.target as HTMLElement
                     if (target.closest('button,[role=checkbox],input,a')) {
                       return
                     }
-                    const conversationId = row.original.latestConversationId
-                    if (!conversationId) {
-                      window.alert('该用户暂无会话记录')
-                      return
-                    }
                     void routeNavigate({
-                      to: '/conversations/$conversationId',
-                      params: { conversationId },
+                      to: '/',
+                      search: () => ({ customerId: row.original.id }),
                     })
                   }}
                 >
