@@ -8,6 +8,12 @@ const { Pool } = require("pg");
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 4173);
 const ANALYTICS_TIMEZONE = "Asia/Shanghai";
+const ONLINE_WINDOW_MINUTES = Number.isFinite(Number(process.env.ONLINE_WINDOW_MINUTES))
+  ? Math.max(1, Math.floor(Number(process.env.ONLINE_WINDOW_MINUTES)))
+  : 5;
+const LOW_REMAINING_WINDOW_HOURS = Number.isFinite(Number(process.env.LOW_REMAINING_WINDOW_HOURS))
+  ? Math.max(1, Math.floor(Number(process.env.LOW_REMAINING_WINDOW_HOURS)))
+  : 48;
 
 const pool = new Pool({
   host: process.env.PGHOST,
@@ -55,15 +61,18 @@ function normalizeParts(parts) {
 
 function extractText(parts) {
   const normalizedParts = normalizeParts(parts);
-  if (!Array.isArray(normalizedParts)) return "";
-  for (let i = normalizedParts.length - 1; i >= 0; i -= 1) {
-    const p = normalizedParts[i];
-    if (!p || typeof p.text !== "string") continue;
-    if (p.type === "reasoning") continue;
-    const t = p.text.replace(/\s+/g, " ").trim();
-    if (t) return t;
+  if (!Array.isArray(normalizedParts) || normalizedParts.length === 0) return "";
+
+  const chunks = [];
+  for (const part of normalizedParts) {
+    if (!part || typeof part.text !== "string") continue;
+    if (part.type === "reasoning") continue;
+    const text = part.text.replace(/\r\n/g, "\n").trim();
+    if (text) chunks.push(text);
   }
-  return "";
+
+  if (chunks.length === 0) return "";
+  return chunks.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function detectSensitive(text) {
@@ -232,9 +241,21 @@ async function runDbChatQuery(question) {
     };
   };
 
+  const shanghaiDayBounds = `
+    with bounds as (
+      select
+        ((now() at time zone '${ANALYTICS_TIMEZONE}')::date::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
+        ((((now() at time zone '${ANALYTICS_TIMEZONE}')::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
+    )
+  `;
+
   if (has(["今天", "今日"]) && has(["注册", "新增"])) {
     return runScalar(
-      `select count(*)::int as 今日新增注册人数 from "user" where created_at >= date_trunc('day', now());`,
+      `${shanghaiDayBounds}
+      select count(*)::int as 今日新增注册人数
+      from "user" u
+      cross join bounds b
+      where u.created_at >= b.start_ts and u.created_at < b.end_ts;`,
       "今日新增注册人数："
     );
   }
@@ -248,15 +269,24 @@ async function runDbChatQuery(question) {
 
   if (has(["今日", "今天"]) && has(["活跃"])) {
     return runScalar(
-      `select count(distinct t.user_id)::int as 今日活跃用户数 from chat_thread t where t.updated_at >= date_trunc('day', now());`,
+      `${shanghaiDayBounds}
+      select count(distinct t.user_id)::int as 今日活跃用户数
+      from chat_message m
+      join chat_thread t on t.id = m.thread_id
+      cross join bounds b
+      where m.role = 'user'
+        and m.created_at >= b.start_ts
+        and m.created_at < b.end_ts;`,
       "今日活跃用户数："
     );
   }
 
   if (has(["在线"])) {
     return runScalar(
-      `select count(distinct t.user_id)::int as 当前在线人数 from chat_thread t where t.updated_at >= now() - interval '5 minutes';`,
-      "当前在线人数（5分钟内活跃）："
+      `select count(distinct t.user_id)::int as 当前在线人数
+      from chat_thread t
+      where t.updated_at >= now() - interval '${ONLINE_WINDOW_MINUTES} minutes';`,
+      `当前在线人数（${ONLINE_WINDOW_MINUTES}分钟内活跃）：`
     );
   }
 
@@ -658,6 +688,15 @@ async function queryMembershipOps(params) {
         where u.created_at >= b.start_ts and u.created_at < b.end_ts
       ) as registered_users,
       (
+        select count(distinct t.user_id)::int
+        from chat_message m
+        join chat_thread t on t.id = m.thread_id
+        cross join bounds b
+        where m.role = 'user'
+          and m.created_at >= b.start_ts
+          and m.created_at < b.end_ts
+      ) as active_users,
+      (
         select count(*)::int
         from paid_stats p
         cross join bounds b
@@ -874,17 +913,31 @@ async function queryMembershipOps(params) {
         and rs.second_paid_at >= b.start_ts
         and rs.second_paid_at < b.end_ts
       group by 1
+    ),
+    active_daily as (
+      select
+        (m.created_at at time zone '${ANALYTICS_TIMEZONE}')::date as day,
+        count(distinct t.user_id)::int as value
+      from chat_message m
+      join chat_thread t on t.id = m.thread_id
+      cross join bounds b
+      where m.role = 'user'
+        and m.created_at >= b.start_ts
+        and m.created_at < b.end_ts
+      group by 1
     )
     select
       to_char(d.day, 'YYYY-MM-DD') as date,
       to_char(d.day, 'MM-DD') as label,
       coalesce(r.value, 0)::int as registered,
       coalesce(s.value, 0)::int as subscribed,
-      coalesce(n.value, 0)::int as renewed
+      coalesce(n.value, 0)::int as renewed,
+      coalesce(a.value, 0)::int as active_users
     from days d
     left join register_daily r on r.day = d.day
     left join subscribe_daily s on s.day = d.day
     left join renew_daily n on n.day = d.day
+    left join active_daily a on a.day = d.day
     order by d.day asc;
   `;
 
@@ -897,6 +950,7 @@ async function queryMembershipOps(params) {
 
   const funnelRow = funnelResult.rows[0] || {};
   const registered = Number(funnelRow.registered_users || 0);
+  const activeUsers = Number(funnelRow.active_users || 0);
   const subscribed = Number(funnelRow.subscribed_users || 0);
   const renewed = Number(funnelRow.renewed_users || 0);
   const visitors = Number.isFinite(visitorResult.count) ? Number(visitorResult.count) : null;
@@ -920,6 +974,7 @@ async function queryMembershipOps(params) {
     registered: Number(row.registered || 0),
     subscribed: Number(row.subscribed || 0),
     renewed: Number(row.renewed || 0),
+    activeUsers: Number(row.active_users || 0),
   }));
 
   return {
@@ -931,6 +986,7 @@ async function queryMembershipOps(params) {
     funnel: {
       visitors,
       registered,
+      activeUsers,
       subscribed,
       renewed,
       conversion: {
@@ -953,7 +1009,71 @@ async function queryMembershipOps(params) {
 async function queryOverview(params) {
   const customerIdFilter = typeof params.customerId === "string" ? params.customerId.trim() : "";
   const hasCustomerIdFilter = Boolean(customerIdFilter);
-  const sql = `
+  const remainingExpr = `
+    case
+      when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
+      else 0
+    end
+  `;
+  const defaultLimit = 15;
+  const maxLimit = hasCustomerIdFilter ? 5000 : 50;
+  const rawLimit = Number(params.limit || defaultLimit);
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.floor(rawLimit), 1), maxLimit) : defaultLimit;
+  const rawOffset = Number(params.offset || 0);
+  const offset = Number.isFinite(rawOffset) ? Math.max(Math.floor(rawOffset), 0) : 0;
+  const membershipFilter = typeof params.membership === "string" ? params.membership.trim() : "all";
+  const remainingFilter = typeof params.remaining === "string" ? params.remaining.trim() : "all";
+  const dateRangeFilter = typeof params.dateRange === "string" ? params.dateRange.trim() : "all";
+  const q = typeof params.q === "string" ? params.q.trim() : "";
+
+  const filters = [];
+  const filterParams = ["inactive", 0];
+  const pushFilterParam = (value) => {
+    filterParams.push(value);
+    return `$${filterParams.length}`;
+  };
+
+  if (hasCustomerIdFilter) {
+    const customerIdSlot = pushFilterParam(customerIdFilter);
+    filters.push(`t.user_id = ${customerIdSlot}`);
+  }
+
+  if (dateRangeFilter === "1d") {
+    filters.push("t.updated_at >= now() - interval '1 day'");
+  } else if (dateRangeFilter === "7d") {
+    filters.push("t.updated_at >= now() - interval '7 days'");
+  } else if (dateRangeFilter === "30d") {
+    filters.push("t.updated_at >= now() - interval '30 days'");
+  }
+
+  if (membershipFilter === "免费版") {
+    filters.push("coalesce(lg.tier, 0) = 0");
+  } else if (membershipFilter === "微光版") {
+    filters.push("coalesce(lg.tier, 0) = 1");
+  } else if (membershipFilter === "烛照版") {
+    filters.push("coalesce(lg.tier, 0) = 2");
+  } else if (membershipFilter === "洞见版") {
+    filters.push("coalesce(lg.tier, 0) = 3");
+  }
+
+  if (remainingFilter === "0-10") {
+    filters.push(`${remainingExpr} between 0 and 10`);
+  } else if (remainingFilter === "10+") {
+    filters.push(`${remainingExpr} > 10`);
+  }
+
+  if (q) {
+    const keywordSlot = pushFilterParam(`%${q.toLowerCase()}%`);
+    filters.push(`(
+      lower(coalesce(t.user_id::text, '')) like ${keywordSlot}
+      or lower(coalesce(u.email, '')) like ${keywordSlot}
+      or lower(coalesce(u.name, '')) like ${keywordSlot}
+      or lower(coalesce(lm.last_message_parts::text, '')) like ${keywordSlot}
+    )`);
+  }
+
+  const whereClause = filters.length > 0 ? `where ${filters.join(" and ")}` : "";
+  const overviewBaseCte = `
     with latest_msg as (
       select distinct on (m.thread_id)
         m.thread_id,
@@ -977,7 +1097,10 @@ async function queryOverview(params) {
         case when g.status = 'active' then 1 else 0 end desc,
         g.period_end desc nulls last,
         g.period_start desc nulls last
-    ),
+    )
+  `;
+  const rowsSql = `
+    ${overviewBaseCte},
     user_message_count as (
       select t.user_id, count(*)::int as message_count
       from chat_message m
@@ -1000,76 +1123,115 @@ async function queryOverview(params) {
       coalesce(lg.status, $1) as membership_status,
       coalesce(lg.tier, $2) as membership_tier,
       coalesce(umc.message_count, 0) as total_chat_count,
-      case
-        when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
-        else 0
-      end as remaining_ai_chat_count
+      ${remainingExpr} as remaining_ai_chat_count
     from chat_thread t
     left join "user" u on u.id = t.user_id
     left join user_profile up on up.user_id = t.user_id
     left join latest_msg lm on lm.thread_id = t.id
     left join latest_grant lg on lg.user_id = t.user_id
     left join user_message_count umc on umc.user_id = t.user_id
-    ${hasCustomerIdFilter ? "where t.user_id = $3" : ""}
+    ${whereClause}
     order by t.updated_at desc nulls last
-    limit ${hasCustomerIdFilter ? 5000 : 600};
+    limit $${filterParams.length + 1}
+    offset $${filterParams.length + 2};
+  `;
+  const countSql = `
+    ${overviewBaseCte}
+    select count(*)::int as total
+    from (select $1::text as default_status, $2::int as default_tier) defaults
+    cross join chat_thread t
+    left join "user" u on u.id = t.user_id
+    left join user_profile up on up.user_id = t.user_id
+    left join latest_msg lm on lm.thread_id = t.id
+    left join latest_grant lg on lg.user_id = t.user_id
+    ${whereClause};
+  `;
+  const kpiSql = `
+    with latest_msg as (
+      select distinct on (m.thread_id)
+        m.thread_id,
+        m.role as last_message_role,
+        m.feedback as last_feedback,
+        m.created_at as last_message_at
+      from chat_message m
+      order by m.thread_id, m.created_at desc
+    ),
+    bounds as (
+      select
+        ((now() at time zone '${ANALYTICS_TIMEZONE}')::date::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
+        ((((now() at time zone '${ANALYTICS_TIMEZONE}')::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
+    ),
+    today_threads as (
+      select
+        t.id,
+        t.user_id,
+        t.created_at,
+        t.updated_at,
+        lm.last_feedback,
+        lm.last_message_role,
+        lm.last_message_at
+      from chat_thread t
+      left join latest_msg lm on lm.thread_id = t.id
+      cross join bounds b
+      where t.updated_at >= b.start_ts
+        and t.updated_at < b.end_ts
+    )
+    select
+      count(*)::int as today_conversations,
+      count(*) filter (where tt.last_feedback = 'dislike')::int as failed_conversations,
+      coalesce(
+        round(
+          avg(
+            case
+              when tt.last_message_role = 'assistant' and tt.last_message_at is not null
+                then greatest(extract(epoch from (tt.last_message_at - tt.created_at)) / 60.0, 0)
+            end
+          )
+        )::int,
+        0
+      ) as avg_first_reply_minutes,
+      (
+        select count(distinct t2.user_id)::int
+        from chat_message m2
+        join chat_thread t2 on t2.id = m2.thread_id
+        cross join bounds b
+        where m2.role = 'user'
+          and m2.created_at >= b.start_ts
+          and m2.created_at < b.end_ts
+      ) as today_active_users
+    from today_threads tt;
   `;
 
-  const queryParams = hasCustomerIdFilter ? ["inactive", 0, customerIdFilter] : ["inactive", 0];
-  const result = await pool.query(sql, queryParams);
+  const rowsParams = [...filterParams, limit, offset];
+  const [rowsResult, countResult, totalUsersResult, subscribedResult, onlineResult, lowRemainingResult, kpiResult] =
+    await Promise.all([
+      pool.query(rowsSql, rowsParams),
+      pool.query(countSql, filterParams),
+      pool.query('select count(*)::int as total from "user"'),
+      pool.query(`
+        select count(distinct g.user_id)::int as total
+        from redemption_grant g
+        where g.status = 'active'
+          and coalesce(g.tier, 0) > 0
+          and (g.period_start is null or g.period_start <= now())
+          and (g.period_end is null or g.period_end >= now())
+      `),
+      pool.query(`
+        select count(distinct t.user_id)::int as total
+        from chat_thread t
+        where t.updated_at >= now() - interval '${ONLINE_WINDOW_MINUTES} minutes'
+      `),
+      pool.query(`
+        select count(distinct t.user_id)::int as total
+        from chat_thread t
+        join user_profile up on up.user_id = t.user_id
+        where t.updated_at >= now() - interval '${LOW_REMAINING_WINDOW_HOURS} hours'
+          and ${remainingExpr} between 0 and 3
+      `),
+      pool.query(kpiSql),
+    ]);
 
-  // Separate aggregate KPIs to avoid bias from only the latest conversation window.
-  // Keep this fault-tolerant: if one KPI query fails, overview list still returns.
-  let totalRegisteredUsers = 0;
-  let currentSubscribedUsers = 0;
-  let lowRemainingUsers = 0;
-  try {
-    const registeredUsersResult = await pool.query('select count(*)::int as total from "user"');
-    totalRegisteredUsers = Number(registeredUsersResult.rows[0]?.total || 0);
-  } catch (_) {
-    totalRegisteredUsers = 0;
-  }
-
-  try {
-    const subscribedUsersResult = await pool.query(`
-      select count(distinct g.user_id)::int as total
-      from redemption_grant g
-      where g.status = 'active'
-        and coalesce(g.tier, 0) > 0
-        and (g.period_start is null or g.period_start <= now())
-        and (g.period_end is null or g.period_end >= now())
-    `);
-    currentSubscribedUsers = Number(subscribedUsersResult.rows[0]?.total || 0);
-  } catch (_) {
-    currentSubscribedUsers = 0;
-  }
-
-  try {
-    const lowRemainingResult = await pool.query(`
-      select count(distinct t.user_id)::int as total
-      from chat_thread t
-      join user_profile up on up.user_id = t.user_id
-      where t.updated_at >= now() - interval '48 hours'
-        and case
-          when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
-          else 0
-        end between 0 and 3
-    `);
-    lowRemainingUsers = Number(lowRemainingResult.rows[0]?.total || 0);
-  } catch (_) {
-    lowRemainingUsers = 0;
-  }
-
-  const dateRangeFilter = params.dateRange || "all";
-  const membershipFilter = params.membership || "all";
-  const remainingFilter = params.remaining || "all";
-  const q = (params.q || "").trim().toLowerCase();
-  const offset = Number(params.offset || 0);
-  const maxLimit = hasCustomerIdFilter ? 5000 : 50;
-  const rawLimit = Number(params.limit || 15);
-  const limit = Math.min(Math.max(rawLimit, 1), maxLimit);
-
-  const rows = result.rows.map((r) => {
+  const rows = rowsResult.rows.map((r) => {
     const latestText = extractText(r.last_message_parts);
     const sensitive = detectSensitive(latestText);
     const status = mapStatus(r);
@@ -1100,71 +1262,38 @@ async function queryOverview(params) {
       firstReplyMinutes: approxFirstReplyMinutes,
     };
   });
-
-  const filtered = rows
-    .filter((x) => {
-      if (dateRangeFilter === "all") return true;
-      const hours = dateRangeFilter === "1d" ? 24 : dateRangeFilter === "7d" ? 24 * 7 : dateRangeFilter === "30d" ? 24 * 30 : null;
-      if (!hours) return true;
-      const threshold = Date.now() - hours * 60 * 60 * 1000;
-      return new Date(x.lastActiveAt).getTime() >= threshold;
-    })
-    .filter((x) => membershipFilter === "all" || x.membershipLevel === membershipFilter)
-    .filter((x) => {
-      if (remainingFilter === "all") return true;
-      if (remainingFilter === "0-10") return x.remainingAiChatCount >= 0 && x.remainingAiChatCount <= 10;
-      if (remainingFilter === "10+") return x.remainingAiChatCount > 10;
-      return true;
-    })
-    .filter((x) => {
-      if (!q) return true;
-      return (
-        (x.customerId || "").toLowerCase().includes(q) ||
-        (x.email || "").toLowerCase().includes(q) ||
-        (x.nickname || "").toLowerCase().includes(q) ||
-        (x.lastMessage || "").toLowerCase().includes(q)
-      );
-    });
-
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayRows = rows.filter((x) => new Date(x.lastActiveAt) >= todayStart);
-  const toGenderLabel = (gender) => {
-    if (gender === 'male') return '男';
-    if (gender === 'female') return '女';
-    return '-';
-  };
-
-  const now = Date.now();
-  const onlineThreshold = now - 5 * 60 * 1000;
-  const todayActiveUsers = new Set(todayRows.map((x) => x.customerId).filter(Boolean)).size;
-  const onlineUsers = new Set(
-    rows
-      .filter((x) => new Date(x.lastActiveAt).getTime() >= onlineThreshold)
-      .map((x) => x.customerId)
-      .filter(Boolean)
-  ).size;
-  const firstReplyCandidates = todayRows.filter((x) => Number.isInteger(x.firstReplyMinutes));
-  const avgFirstReply = firstReplyCandidates.length
-    ? Math.round(firstReplyCandidates.reduce((sum, x) => sum + x.firstReplyMinutes, 0) / firstReplyCandidates.length)
-    : 0;
-  const failedCount = todayRows.filter((x) => x.status === "failed").length;
+  const overviewTotal = Number(countResult.rows[0]?.total || 0);
+  const totalRegisteredUsers = Number(totalUsersResult.rows[0]?.total || 0);
+  const currentSubscribedUsers = Number(subscribedResult.rows[0]?.total || 0);
+  const lowRemainingUsers = Number(lowRemainingResult.rows[0]?.total || 0);
+  const currentOnlineUsers = Number(onlineResult.rows[0]?.total || 0);
+  const kpiRow = kpiResult.rows[0] || {};
+  const todayActiveUsers = Number(kpiRow.today_active_users || 0);
+  const todayConversations = Number(kpiRow.today_conversations || 0);
+  const avgFirstReply = Number(kpiRow.avg_first_reply_minutes || 0);
+  const failedCount = Number(kpiRow.failed_conversations || 0);
 
   return {
+    definitions: {
+      timezone: ANALYTICS_TIMEZONE,
+      todayActiveUsers: "当日有 user 角色消息的去重用户数",
+      currentOnlineUsers: `${ONLINE_WINDOW_MINUTES} 分钟内有会话活跃（chat_thread.updated_at）的去重用户数`,
+      lowRemainingUsers: `${LOW_REMAINING_WINDOW_HOURS} 小时内活跃且剩余次数 0-3 的去重用户数`,
+    },
     kpis: {
       totalRegisteredUsers,
       todayActiveUsers,
-      currentOnlineUsers: onlineUsers,
+      currentOnlineUsers,
       currentSubscribedUsers,
       lowRemainingUsers,
 
       // Keep legacy fields for backward compatibility.
-      todayConversations: todayRows.length,
+      todayConversations,
       avgFirstReplyMinutes: avgFirstReply,
       failedConversations: failedCount,
     },
-    total: filtered.length,
-    rows: filtered.slice(offset, offset + limit),
+    total: overviewTotal,
+    rows,
   };
 }
 
