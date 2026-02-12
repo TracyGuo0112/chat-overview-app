@@ -1314,6 +1314,59 @@ async function queryOverview(params) {
 
 
 async function queryUsers(params = {}) {
+  const toArrayParam = (value) => {
+    if (Array.isArray(value)) {
+      return value.map((x) => String(x || "").trim()).filter(Boolean);
+    }
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  const parsePositiveInt = (value, fallback, min, max) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(Math.max(Math.floor(parsed), min), max);
+  };
+
+  const page = parsePositiveInt(params.page, 1, 1, 500);
+  const pageSize = parsePositiveInt(params.pageSize, 10, 1, 5000);
+  const offset = (page - 1) * pageSize;
+  const nicknameKeyword = typeof params.nickname === "string" ? params.nickname.trim().toLowerCase() : "";
+  const subscriptionStatusFilter = toArrayParam(params.subscriptionStatus).filter((x) =>
+    x === "免费版" || x === "微光版" || x === "烛照版" || x === "洞见版"
+  );
+  const subscriptionExpiredFilter = toArrayParam(params.subscriptionExpired).filter((x) =>
+    x === "已用完" || x === "未用完" || x === "未过期" || x === "已过期"
+  );
+  const registerStartDateRaw =
+    typeof params.registerStartDate === "string" ? params.registerStartDate.trim() : "";
+  const registerEndDateRaw =
+    typeof params.registerEndDate === "string" ? params.registerEndDate.trim() : "";
+
+  const registerStartDate = registerStartDateRaw || "";
+  const registerEndDate = registerEndDateRaw || "";
+
+  if (registerStartDate && !isValidDateParam(registerStartDate)) {
+    const err = new Error("invalid_register_start_date");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (registerEndDate && !isValidDateParam(registerEndDate)) {
+    const err = new Error("invalid_register_end_date");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (registerStartDate && registerEndDate && registerStartDate > registerEndDate) {
+    const err = new Error("register_start_date_after_end_date");
+    err.statusCode = 400;
+    throw err;
+  }
+
   const funnelSegmentRaw = typeof params.funnelSegment === "string" ? params.funnelSegment.trim() : "";
   const funnelSegment =
     funnelSegmentRaw === "registered" ||
@@ -1348,6 +1401,35 @@ async function queryUsers(params = {}) {
             ? "rs.second_paid_at"
             : "";
 
+  const queryParams = [];
+  if (funnelSegment) {
+    queryParams.push(startDate, endDate);
+  }
+
+  const whereConditions = [];
+  if (funnelSegment) {
+    whereConditions.push(
+      `${rangeFilterField} is not null`,
+      `${rangeFilterField} >= b.start_ts`,
+      `${rangeFilterField} < b.end_ts`
+    );
+  }
+
+  if (registerStartDate) {
+    queryParams.push(registerStartDate);
+    const startPlaceholder = `$${queryParams.length}`;
+    whereConditions.push(
+      `u.created_at >= ((${startPlaceholder}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`
+    );
+  }
+  if (registerEndDate) {
+    queryParams.push(registerEndDate);
+    const endPlaceholder = `$${queryParams.length}`;
+    whereConditions.push(
+      `u.created_at < (((${endPlaceholder}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
+    );
+  }
+
   const boundsCte = funnelSegment
     ? `,
     bounds as (
@@ -1357,11 +1439,7 @@ async function queryUsers(params = {}) {
     )`
     : "";
   const boundsJoin = funnelSegment ? "cross join bounds b" : "";
-  const whereRange = funnelSegment
-    ? `where ${rangeFilterField} is not null
-      and ${rangeFilterField} >= b.start_ts
-      and ${rangeFilterField} < b.end_ts`
-    : "";
+  const whereClause = whereConditions.length > 0 ? `where ${whereConditions.join("\n      and ")}` : "";
   const sql = `
     with latest_grant as (
       select distinct on (g.user_id)
@@ -1469,12 +1547,10 @@ async function queryUsers(params = {}) {
     left join paid_stats ps on ps.email_key = lower(trim(u.email))
     left join renew_stats rs on rs.email_key = lower(trim(u.email))
     left join latest_thread lt on lt.user_id = u.id
-    ${whereRange}
+    ${whereClause}
     order by u.created_at desc
     limit 5000;
   `;
-
-  const queryParams = funnelSegment ? [startDate, endDate] : [];
   const result = await pool.query(sql, queryParams);
 
   const toNameParts = (name, email, userId) => {
@@ -1590,10 +1666,42 @@ async function queryUsers(params = {}) {
     };
   });
 
+  let filtered = rows;
+
+  if (nicknameKeyword) {
+    filtered = filtered.filter((row) => {
+      const nickname = String(row.nickname || "").toLowerCase();
+      const username = String(row.username || "").toLowerCase();
+      const email = String(row.email || "").toLowerCase();
+      return nickname.includes(nicknameKeyword) || username.includes(nicknameKeyword) || email.includes(nicknameKeyword);
+    });
+  }
+
+  if (subscriptionStatusFilter.length > 0) {
+    const allow = new Set(subscriptionStatusFilter);
+    filtered = filtered.filter((row) => allow.has(String(row.subscriptionStatus || "免费版")));
+  }
+
+  if (subscriptionExpiredFilter.length > 0) {
+    const allow = new Set(subscriptionExpiredFilter);
+    filtered = filtered.filter((row) => allow.has(String(row.subscriptionExpired || "")));
+  }
+
   return {
-    total: rows.length,
-    rows,
-    filters: funnelSegment ? { funnelSegment, startDate, endDate } : undefined,
+    total: filtered.length,
+    rows: filtered.slice(offset, offset + pageSize),
+    page,
+    pageSize,
+    filters: {
+      funnelSegment: funnelSegment || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      nickname: nicknameKeyword || undefined,
+      subscriptionStatus: subscriptionStatusFilter,
+      subscriptionExpired: subscriptionExpiredFilter,
+      registerStartDate: registerStartDate || undefined,
+      registerEndDate: registerEndDate || undefined,
+    },
   };
 }
 

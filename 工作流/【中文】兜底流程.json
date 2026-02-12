@@ -1,0 +1,660 @@
+﻿{
+  "nodes": [
+    {
+      "nodeId": "userGuide",
+      "name": "系统配置",
+      "intro": "可以配置应用的系统参数",
+      "avatar": "core/workflow/template/systemConfig",
+      "flowNodeType": "userGuide",
+      "position": {
+        "x": 531.2422736065552,
+        "y": -486.7611729549753
+      },
+      "inputs": [
+        {
+          "key": "welcomeText",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "core.app.Welcome Text",
+          "value": "你好，我是知识库助手，请不要忘记选择知识库噢~\n[你是谁]\n[如何使用]"
+        },
+        {
+          "key": "variables",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "core.app.Chat Variable",
+          "value": []
+        },
+        {
+          "key": "questionGuide",
+          "valueType": "boolean",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "core.app.Question Guide",
+          "value": true
+        },
+        {
+          "key": "tts",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "type": "web"
+          }
+        },
+        {
+          "key": "whisper",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "open": false,
+            "autoSend": false,
+            "autoTTSResponse": false
+          }
+        },
+        {
+          "key": "scheduleTrigger",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "workflowStartNodeId",
+      "name": "流程开始",
+      "intro": "",
+      "avatar": "core/workflow/template/workflowStart",
+      "flowNodeType": "workflowStart",
+      "position": {
+        "x": -378.64506234609655,
+        "y": 72.99870426682389
+      },
+      "inputs": [
+        {
+          "key": "userChatInput",
+          "renderTypeList": [
+            "reference",
+            "textarea"
+          ],
+          "valueType": "string",
+          "label": "workflow:user_question",
+          "required": true,
+          "toolDescription": "User Question",
+          "debugLabel": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "userChatInput",
+          "key": "userChatInput",
+          "label": "common:core.module.input.label.user question",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "sJqE0gnbm0As",
+      "name": "HTTP 请求",
+      "intro": "可以发出一个 HTTP 请求，实现更为复杂的操作（联网搜索、数据库查询等）",
+      "avatar": "core/workflow/template/httpRequest",
+      "flowNodeType": "httpRequest468",
+      "showStatus": true,
+      "position": {
+        "x": 1711.840692177107,
+        "y": 138.89864442414145
+      },
+      "inputs": [
+        {
+          "key": "system_addInputParam",
+          "renderTypeList": [
+            "addInputParam"
+          ],
+          "valueType": "dynamic",
+          "label": "",
+          "required": false,
+          "description": "common:core.module.input.description.HTTP Dynamic Input",
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          },
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpMethod",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "string",
+          "label": "",
+          "value": "POST",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpTimeout",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "number",
+          "label": "",
+          "value": 30,
+          "min": 5,
+          "max": 600,
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpReqUrl",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Url",
+          "placeholder": "https://api.ai.com/getInventory",
+          "required": false,
+          "value": "https://ai.djicorp.com/ai/fastgpt/api/v1/chat/completions",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_header_secret",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "object",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpHeader",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "any",
+          "value": [
+            {
+              "key": "Content-Type",
+              "type": "string",
+              "value": "application/json"
+            },
+            {
+              "key": "Authorization",
+              "type": "string",
+              "value": "Bearer fastgpt-PVWqQHAHJtyuyI8DLVaI0iBzMyS7HL79pNA0R3yKXek8pFajmoqxb0Nurz1sJNo"
+            }
+          ],
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Header",
+          "placeholder": "common:core.module.input.description.Http Request Header",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpParams",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpJsonBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": "{\r\n    \"AppId\": \"673da05c3cd9fa0a034ab861\",\r\n    \"detail\": \"false\",\r\n    \"messages\": [{\"role\": \"user\", \"content\": \"{{query}}\"}]\r\n}",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpFormBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpContentType",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "value": "json",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "query",
+          "valueType": "string",
+          "label": "query",
+          "renderTypeList": [
+            "reference"
+          ],
+          "description": "",
+          "canEdit": true,
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "value": [
+            "workflowStartNodeId",
+            "userChatInput"
+          ],
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "httpRawResponse",
+          "key": "httpRawResponse",
+          "label": "workflow:raw_response",
+          "description": "Raw HTTP response. Only accepts string or JSON type response data.",
+          "valueType": "any",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "error",
+          "key": "error",
+          "label": "workflow:error_text",
+          "valueType": "string",
+          "type": "error",
+          "description": ""
+        },
+        {
+          "id": "system_addOutputParam",
+          "key": "system_addOutputParam",
+          "type": "dynamic",
+          "valueType": "dynamic",
+          "label": "",
+          "editField": {
+            "key": true,
+            "valueType": true
+          }
+        },
+        {
+          "id": "g9u96doAYuc8",
+          "type": "dynamic",
+          "key": "responseData[1].quoteList[0].a",
+          "valueType": "string",
+          "label": "responseData[1].quoteList[0].a"
+        }
+      ],
+      "catchError": true
+    },
+    {
+      "nodeId": "vnAyQoyiVYuN",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3206.4079057160543,
+        "y": 211.78751535634132
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "selectedTypeIndex": 1,
+          "value": [
+            "sJqE0gnbm0As",
+            "g9u96doAYuc8"
+          ],
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "ozOQ818S1gNc",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 2401.374452343702,
+        "y": 293.0377227386007
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "sJqE0gnbm0As",
+                    "g9u96doAYuc8"
+                  ],
+                  "condition": "isNotEmpty"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "scgpP5kSwy9k",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3185.8569624061415,
+        "y": 475.1072747791376
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "很抱歉，小疆没有学到这个知识，给您带来困扰了，您可以☞<a href=\"javascript:window.sendTextMessage ? window.sendTextMessage(`人工协助`) : `:;`\">点击此处</a>获得人工服务，或者继续发送消息与小疆沟通。",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "jexp3s0XfEHw",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 396.51274845536955,
+        "y": 72.54187439676653
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "workflowStartNodeId",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "人工"
+                },
+                {
+                  "variable": [
+                    "workflowStartNodeId",
+                    "userChatInput"
+                  ],
+                  "condition": "notEqual",
+                  "value": "人工协助"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "workflowStartNodeId",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "人工协助"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "kPMBsP8yw4OQ",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 1766.9128901572722,
+        "y": -579.8790851464947
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>猜您想了解以下问题，请点击查看详细信息：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"了解产品功能\", \"title\": \"了解产品功能\"}, {\"displayContent\":\"商城订单查询\", \"title\": \"商城订单查询\"}, {\"displayContent\":\"DJI Care 增值服务咨询\", \"title\": \"DJI Care 增值服务咨询\"}, {\"displayContent\":\"查询激活 | Care | 案例进度\", \"title\": \"查询激活 | Care | 案例进度\"}, {\"displayContent\":\"都不是，转接人工服务\", \"title\": \"人工协助\"} ]}' ></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "yT7Me2Go4eYR",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 1781.576755961717,
+        "y": -223.4431704062763
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "#ZRG",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "sJqE0gnbm0As",
+      "target": "ozOQ818S1gNc",
+      "sourceHandle": "sJqE0gnbm0As-source-right",
+      "targetHandle": "ozOQ818S1gNc-target-left"
+    },
+    {
+      "source": "ozOQ818S1gNc",
+      "target": "vnAyQoyiVYuN",
+      "sourceHandle": "ozOQ818S1gNc-source-IF",
+      "targetHandle": "vnAyQoyiVYuN-target-left"
+    },
+    {
+      "source": "ozOQ818S1gNc",
+      "target": "scgpP5kSwy9k",
+      "sourceHandle": "ozOQ818S1gNc-source-ELSE",
+      "targetHandle": "scgpP5kSwy9k-target-left"
+    },
+    {
+      "source": "workflowStartNodeId",
+      "target": "jexp3s0XfEHw",
+      "sourceHandle": "workflowStartNodeId-source-right",
+      "targetHandle": "jexp3s0XfEHw-target-left"
+    },
+    {
+      "source": "jexp3s0XfEHw",
+      "target": "kPMBsP8yw4OQ",
+      "sourceHandle": "jexp3s0XfEHw-source-IF",
+      "targetHandle": "kPMBsP8yw4OQ-target-left"
+    },
+    {
+      "source": "jexp3s0XfEHw",
+      "target": "yT7Me2Go4eYR",
+      "sourceHandle": "jexp3s0XfEHw-source-ELSE IF 1",
+      "targetHandle": "yT7Me2Go4eYR-target-left"
+    },
+    {
+      "source": "jexp3s0XfEHw",
+      "target": "sJqE0gnbm0As",
+      "sourceHandle": "jexp3s0XfEHw-source-ELSE",
+      "targetHandle": "sJqE0gnbm0As-target-left"
+    },
+    {
+      "source": "sJqE0gnbm0As",
+      "target": "ozOQ818S1gNc",
+      "sourceHandle": "sJqE0gnbm0As-source_catch-right",
+      "targetHandle": "ozOQ818S1gNc-target-left"
+    }
+  ],
+  "chatConfig": {
+    "scheduledTriggerConfig": {
+      "cronString": "",
+      "timezone": "Asia/Shanghai",
+      "defaultPrompt": ""
+    }
+  }
+}
