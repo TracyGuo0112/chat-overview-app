@@ -1313,7 +1313,55 @@ async function queryOverview(params) {
 }
 
 
-async function queryUsers() {
+async function queryUsers(params = {}) {
+  const funnelSegmentRaw = typeof params.funnelSegment === "string" ? params.funnelSegment.trim() : "";
+  const funnelSegment =
+    funnelSegmentRaw === "registered" ||
+    funnelSegmentRaw === "firstConversation" ||
+    funnelSegmentRaw === "subscribed" ||
+    funnelSegmentRaw === "renewed"
+      ? funnelSegmentRaw
+      : "";
+
+  if (funnelSegmentRaw && !funnelSegment) {
+    const err = new Error("invalid_funnel_segment");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let startDate = "";
+  let endDate = "";
+  if (funnelSegment) {
+    const range = await resolveMembershipDateRange(params || {});
+    startDate = range.startDate;
+    endDate = range.endDate;
+  }
+
+  const rangeFilterField =
+    funnelSegment === "registered"
+      ? "u.created_at"
+      : funnelSegment === "firstConversation"
+        ? "fum.first_user_message_at"
+        : funnelSegment === "subscribed"
+          ? "ps.first_paid_at"
+          : funnelSegment === "renewed"
+            ? "rs.second_paid_at"
+            : "";
+
+  const boundsCte = funnelSegment
+    ? `,
+    bounds as (
+      select
+        (($1::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
+        ((($2::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
+    )`
+    : "";
+  const boundsJoin = funnelSegment ? "cross join bounds b" : "";
+  const whereRange = funnelSegment
+    ? `where ${rangeFilterField} is not null
+      and ${rangeFilterField} >= b.start_ts
+      and ${rangeFilterField} < b.end_ts`
+    : "";
   const sql = `
     with latest_grant as (
       select distinct on (g.user_id)
@@ -1373,7 +1421,7 @@ async function queryUsers() {
         min(redeemed_at) filter (where rn = 2) as second_paid_at
       from renew_ranked
       group by email_key
-    ),
+    )${boundsCte},
     chat_stats as (
       select
         t.user_id,
@@ -1413,6 +1461,7 @@ async function queryUsers() {
         else 0
       end as remaining_ai_chat_count
     from "user" u
+    ${boundsJoin}
     left join user_profile up on up.user_id = u.id
     left join latest_grant lg on lg.user_id = u.id
     left join chat_stats cs on cs.user_id = u.id
@@ -1420,11 +1469,13 @@ async function queryUsers() {
     left join paid_stats ps on ps.email_key = lower(trim(u.email))
     left join renew_stats rs on rs.email_key = lower(trim(u.email))
     left join latest_thread lt on lt.user_id = u.id
+    ${whereRange}
     order by u.created_at desc
     limit 5000;
   `;
 
-  const result = await pool.query(sql);
+  const queryParams = funnelSegment ? [startDate, endDate] : [];
+  const result = await pool.query(sql, queryParams);
 
   const toNameParts = (name, email, userId) => {
     const fallback = email && email.includes('@') ? email.split('@')[0] : `user_${(userId || '').slice(-6)}`;
@@ -1539,7 +1590,11 @@ async function queryUsers() {
     };
   });
 
-  return { total: rows.length, rows };
+  return {
+    total: rows.length,
+    rows,
+    filters: funnelSegment ? { funnelSegment, startDate, endDate } : undefined,
+  };
 }
 
 
@@ -1653,11 +1708,12 @@ async function handleApi(req, res, parsedUrl) {
 
   if (parsedUrl.pathname === "/api/users") {
     try {
-      const payload = await queryUsers();
+      const payload = await queryUsers(parsedUrl.query || {});
       return json(res, 200, payload);
     } catch (err) {
+      const statusCode = Number(err?.statusCode || 500);
       console.error("[users] query failed", err);
-      return json(res, 500, { error: "users_query_failed", message: err.message });
+      return json(res, statusCode, { error: "users_query_failed", message: err.message });
     }
   }
 
