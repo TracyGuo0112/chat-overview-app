@@ -46,6 +46,12 @@ const userSchema = z.object({
   subscriptionStatus: subscriptionStatusSchema.optional(),
   subscriptionExpired: subscriptionExpiredSchema.optional(),
   latestConversationId: z.string().nullable().optional(),
+  totalChatCount: z.number().int().nonnegative().optional(),
+  remainingAiChatCount: z.number().int().nonnegative().optional(),
+  lastActiveAt: z.coerce.date().nullable().optional(),
+  firstConversationAt: z.coerce.date().nullable().optional(),
+  firstPaidAt: z.coerce.date().nullable().optional(),
+  secondPaidAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

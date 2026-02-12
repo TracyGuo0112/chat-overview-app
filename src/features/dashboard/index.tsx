@@ -337,7 +337,7 @@ export function Dashboard() {
           </Card>
           <Card>
             <CardHeader className='pb-2'>
-              <CardDescription>当前订阅人数</CardDescription>
+              <CardDescription>当前订阅（未到期）人数</CardDescription>
               <CardTitle className='text-2xl'>
                 {Number(kpis.currentSubscribedUsers ?? 0).toLocaleString()}
               </CardTitle>

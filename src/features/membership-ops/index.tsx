@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import {
   Bar,
@@ -49,7 +50,9 @@ type FunnelPayload = {
   renewed: number
   conversion: {
     visitToRegister: number | null
-    registerToSubscribe: number | null
+    registerToFirstConversation: number | null
+    firstConversationToSubscribe: number | null
+    registerToSubscribe?: number | null
     subscribeToRenew: number | null
   }
   visitorSource: {
@@ -63,6 +66,8 @@ type FunnelPayload = {
 type TierComparisonItem = {
   tier: '免费版' | '微光版' | '烛照版' | '洞见版' | string
   totalUsers: number
+  activeUsers: number
+  activeRate: number
   totalUserTurns: number
   avgUserTurnsPerUser: number
   p50UserTurnsPerUser: number
@@ -70,6 +75,8 @@ type TierComparisonItem = {
   lowRemainingRate: number
   exhaustedUsers: number
 }
+
+type TierLabel = '免费版' | '微光版' | '烛照版' | '洞见版'
 
 type TrendPoint = {
   date: string
@@ -129,7 +136,17 @@ function getTierColor(tier: string) {
   return '#64748b'
 }
 
+function isTierLabel(value: string): value is TierLabel {
+  return (
+    value === '免费版' ||
+    value === '微光版' ||
+    value === '烛照版' ||
+    value === '洞见版'
+  )
+}
+
 export function MembershipOps() {
+  const navigate = useNavigate()
   const [data, setData] = useState<MembershipOpsPayload | null>(null)
   const [draftStartDate, setDraftStartDate] = useState('')
   const [draftEndDate, setDraftEndDate] = useState('')
@@ -204,6 +221,11 @@ export function MembershipOps() {
         label: `注册 ${formatNumber(data.funnel.registered)}`,
       },
       {
+        name: '首次对话',
+        value: data.funnel.activeUsers,
+        label: `首次对话 ${formatNumber(data.funnel.activeUsers)}`,
+      },
+      {
         name: '订阅',
         value: data.funnel.subscribed,
         label: `订阅 ${formatNumber(data.funnel.subscribed)}`,
@@ -231,6 +253,49 @@ export function MembershipOps() {
     [data]
   )
 
+  const goUsersByTier = (tier: string) => {
+    if (!isTierLabel(tier)) return
+    void navigate({
+      to: '/users',
+      search: () => ({
+        page: 1,
+        pageSize: 10,
+        nickname: '',
+        subscriptionStatus: [tier],
+        subscriptionExpired: [] as (
+          | '已用完'
+          | '未用完'
+          | '未过期'
+          | '已过期'
+        )[],
+      }),
+    })
+  }
+
+  const goUsersByFunnel = (
+    segment: 'registered' | 'firstConversation' | 'subscribed' | 'renewed'
+  ) => {
+    if (!data) return
+    void navigate({
+      to: '/users',
+      search: () => ({
+        page: 1,
+        pageSize: 10,
+        nickname: '',
+        subscriptionStatus: [] as TierLabel[],
+        subscriptionExpired: [] as (
+          | '已用完'
+          | '未用完'
+          | '未过期'
+          | '已过期'
+        )[],
+        funnelSegment: segment,
+        startDate: data.range.startDate,
+        endDate: data.range.endDate,
+      }),
+    })
+  }
+
   return (
     <>
       <Header fixed>
@@ -248,7 +313,7 @@ export function MembershipOps() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>会员运营分析</h2>
             <p className='text-muted-foreground'>
-              转化漏斗（游客→注册→订阅→续费）与会员分档对比（咨询频次、额度风险）。
+              转化漏斗（游客→注册→首次对话→订阅→续费）与会员分档对比（咨询频次、额度风险）。
             </p>
           </div>
           <Button
@@ -334,14 +399,7 @@ export function MembershipOps() {
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.visitors)}
               </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className='pb-2'>
-              <CardDescription>活跃人数（有对话）</CardDescription>
-              <CardTitle className='text-2xl'>
-                {formatNumber(data?.funnel.activeUsers)}
-              </CardTitle>
+              <CardDescription>来源于 PostHog 去重访客</CardDescription>
             </CardHeader>
           </Card>
           <Card>
@@ -353,6 +411,35 @@ export function MembershipOps() {
               <CardDescription>
                 {formatPercent(data?.funnel.conversion.visitToRegister)}
               </CardDescription>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='mt-1 h-7 justify-start px-0 text-muted-foreground'
+                onClick={() => goUsersByFunnel('registered')}
+              >
+                查看名单
+              </Button>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className='pb-2'>
+              <CardDescription>首次对话（转化率）</CardDescription>
+              <CardTitle className='text-2xl'>
+                {formatNumber(data?.funnel.activeUsers)}
+              </CardTitle>
+              <CardDescription>
+                {formatPercent(
+                  data?.funnel.conversion.registerToFirstConversation
+                )}
+              </CardDescription>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='mt-1 h-7 justify-start px-0 text-muted-foreground'
+                onClick={() => goUsersByFunnel('firstConversation')}
+              >
+                查看名单
+              </Button>
             </CardHeader>
           </Card>
           <Card>
@@ -362,8 +449,19 @@ export function MembershipOps() {
                 {formatNumber(data?.funnel.subscribed)}
               </CardTitle>
               <CardDescription>
-                {formatPercent(data?.funnel.conversion.registerToSubscribe)}
+                {formatPercent(
+                  data?.funnel.conversion.firstConversationToSubscribe ??
+                    data?.funnel.conversion.registerToSubscribe
+                )}
               </CardDescription>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='mt-1 h-7 justify-start px-0 text-muted-foreground'
+                onClick={() => goUsersByFunnel('subscribed')}
+              >
+                查看名单
+              </Button>
             </CardHeader>
           </Card>
           <Card>
@@ -375,6 +473,14 @@ export function MembershipOps() {
               <CardDescription>
                 {formatPercent(data?.funnel.conversion.subscribeToRenew)}
               </CardDescription>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='mt-1 h-7 justify-start px-0 text-muted-foreground'
+                onClick={() => goUsersByFunnel('renewed')}
+              >
+                查看名单
+              </Button>
             </CardHeader>
           </Card>
         </div>
@@ -384,7 +490,7 @@ export function MembershipOps() {
             <CardHeader>
               <CardTitle>转化漏斗</CardTitle>
               <CardDescription>
-                游客 → 注册 → 订阅 →
+                游客 → 注册 → 首次对话 → 订阅 →
                 初次续费（同邮箱去重，按第2次付费时间计入）。
               </CardDescription>
             </CardHeader>
@@ -511,7 +617,10 @@ export function MembershipOps() {
           <CardHeader>
             <CardTitle>分档明细表</CardTitle>
             <CardDescription>
-              咨询频次按消息发生时会员档位归因（同一用户跨档会拆分到不同档位）。
+              活跃度按当前会员档位统计；咨询频次按消息发生时会员档位归因（同一用户跨档会拆分到不同档位）。
+            </CardDescription>
+            <CardDescription>
+              可直接下钻到用户管理，再点击用户行查看其完整历史会话。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -520,6 +629,8 @@ export function MembershipOps() {
                 <TableRow>
                   <TableHead>会员档位</TableHead>
                   <TableHead className='text-right'>总用户数</TableHead>
+                  <TableHead className='text-right'>活跃用户数</TableHead>
+                  <TableHead className='text-right'>活跃率</TableHead>
                   <TableHead className='text-right'>
                     用户消息轮数（总）
                   </TableHead>
@@ -532,6 +643,7 @@ export function MembershipOps() {
                   <TableHead className='text-right'>
                     已用完用户数（=0）
                   </TableHead>
+                  <TableHead className='text-center'>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -540,6 +652,12 @@ export function MembershipOps() {
                     <TableCell className='font-medium'>{row.tier}</TableCell>
                     <TableCell className='text-right'>
                       {formatNumber(row.totalUsers)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatNumber(row.activeUsers)}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      {formatPercent(row.activeRate)}
                     </TableCell>
                     <TableCell className='text-right'>
                       {formatNumber(row.totalUserTurns)}
@@ -558,6 +676,15 @@ export function MembershipOps() {
                     </TableCell>
                     <TableCell className='text-right'>
                       {formatNumber(row.exhaustedUsers)}
+                    </TableCell>
+                    <TableCell className='text-center'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => goUsersByTier(row.tier)}
+                      >
+                        查看用户
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

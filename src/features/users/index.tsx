@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -19,12 +19,69 @@ type UsersApiPayload = {
   rows: User[]
 }
 
+const shanghaiDayFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Shanghai',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+function toShanghaiDate(value: unknown) {
+  const date = value instanceof Date ? value : new Date(String(value || ''))
+  if (Number.isNaN(date.getTime())) return null
+  return shanghaiDayFormatter.format(date)
+}
+
+function inDateRange(
+  value: unknown,
+  startDate: string | undefined,
+  endDate: string | undefined
+) {
+  const day = toShanghaiDate(value)
+  if (!day) return false
+  if (startDate && day < startDate) return false
+  if (endDate && day > endDate) return false
+  return true
+}
+
 export function Users() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const [users, setUsers] = useState<User[]>([])
+  const [rawUsers, setRawUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const segmentLabelMap = {
+    registered: '注册用户',
+    firstConversation: '首次对话用户',
+    subscribed: '订阅用户',
+    renewed: '初次续费用户',
+  } as const
+
+  const users = useMemo(() => {
+    const segment = search.funnelSegment as
+      | 'registered'
+      | 'firstConversation'
+      | 'subscribed'
+      | 'renewed'
+      | undefined
+    const startDate = search.startDate || ''
+    const endDate = search.endDate || ''
+    if (!segment) return rawUsers
+
+    return rawUsers.filter((user) => {
+      if (segment === 'registered') {
+        return inDateRange(user.createdAt, startDate, endDate)
+      }
+      if (segment === 'firstConversation') {
+        return inDateRange(user.firstConversationAt, startDate, endDate)
+      }
+      if (segment === 'subscribed') {
+        return inDateRange(user.firstPaidAt, startDate, endDate)
+      }
+      return inDateRange(user.secondPaidAt, startDate, endDate)
+    })
+  }, [rawUsers, search.endDate, search.funnelSegment, search.startDate])
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -39,10 +96,10 @@ export function Users() {
               `请求失败（HTTP ${resp.status}）`
           )
         }
-        setUsers(Array.isArray(payload?.rows) ? payload.rows : [])
+        setRawUsers(Array.isArray(payload?.rows) ? payload.rows : [])
       } catch (err) {
         setError(err instanceof Error ? err.message : '用户数据加载失败')
-        setUsers([])
+        setRawUsers([])
       } finally {
         setLoading(false)
       }
@@ -69,6 +126,12 @@ export function Users() {
             <p className='text-muted-foreground'>
               查看数据库中的真实用户信息与账户状态。
             </p>
+            {search.funnelSegment ? (
+              <p className='mt-1 text-xs text-muted-foreground'>
+                当前筛选：{segmentLabelMap[search.funnelSegment]}（
+                {search.startDate || '-'} ~ {search.endDate || '-'}）
+              </p>
+            ) : null}
           </div>
           <UsersPrimaryButtons />
         </div>
