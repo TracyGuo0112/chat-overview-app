@@ -7,8 +7,6 @@ import {
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -29,11 +27,13 @@ import { usersColumns as columns } from './users-columns'
 
 type DataTableProps = {
   data: User[]
+  total?: number
   search: Record<string, unknown>
   navigate: NavigateFn
 }
 
-export function UsersTable({ data, search, navigate }: DataTableProps) {
+export function UsersTable({ data, total, search, navigate }: DataTableProps) {
+  const totalRows = Number.isFinite(Number(total)) ? Number(total) : data.length
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -75,6 +75,13 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
   const table = useReactTable({
     data,
     columns,
+    manualPagination: true,
+    manualFiltering: true,
+    pageCount: Math.max(
+      1,
+      Math.ceil(totalRows / Math.max(pagination.pageSize, 1))
+    ),
+    rowCount: totalRows,
     state: {
       sorting,
       pagination,
@@ -88,17 +95,19 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    getPaginationRowModel: getPaginationRowModel(),
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
   useEffect(() => {
-    ensurePageInRange(table.getPageCount())
-  }, [table, ensurePageInRange])
+    const pageCount = Math.max(
+      1,
+      Math.ceil(totalRows / Math.max(pagination.pageSize, 1))
+    )
+    ensurePageInRange(pageCount)
+  }, [ensurePageInRange, pagination.pageSize, totalRows])
 
   return (
     <div
@@ -114,7 +123,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
         filters={[
           {
             columnId: 'subscriptionStatus',
-            title: '订阅状态',
+            title: '订阅版本筛选',
             options: [
               { label: '免费版', value: '免费版' },
               { label: '微光版', value: '微光版' },
@@ -124,7 +133,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
           },
           {
             columnId: 'subscriptionExpired',
-            title: '状态',
+            title: '账户状态筛选',
             options: [
               { label: '已用完', value: '已用完' },
               { label: '未用完', value: '未用完' },

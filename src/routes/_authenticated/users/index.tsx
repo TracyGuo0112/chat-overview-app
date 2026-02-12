@@ -17,6 +17,8 @@ const usersSearchSchema = z.object({
   source: z.literal('membershipOps').optional().catch(undefined),
   startDate: z.string().optional().catch(''),
   endDate: z.string().optional().catch(''),
+  registerStartDate: z.string().optional().catch(''),
+  registerEndDate: z.string().optional().catch(''),
   // Facet filters
   subscriptionStatus: z
     .array(

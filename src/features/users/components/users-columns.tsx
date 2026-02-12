@@ -201,7 +201,7 @@ export const usersColumns: ColumnDef<User>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
-        title='订阅状态'
+        title='订阅版本'
         className='justify-center'
       />
     ),
@@ -230,7 +230,7 @@ export const usersColumns: ColumnDef<User>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
-        title='状态'
+        title='账户状态'
         className='justify-center'
       />
     ),
