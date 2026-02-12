@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>会话总览预览（实时数据库）</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; background: #f4f6fb; color: #111827; }
+    .page { max-width: 1280px; margin: 0 auto; padding: 18px; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .meta { font-size: 12px; color: #64748b; }
+    .kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
+    .label { font-size: 12px; color: #64748b; }
+    .value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+    .toolbar, .batch { display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+    .toolbar input, .toolbar select, button { border: 1px solid #dbe2ee; border-radius: 8px; padding: 7px 10px; font-size: 13px; background: #fff; }
+    .toolbar input { flex: 1; }
+    .primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .table-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; }
+    .msg { max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tag { display: inline-block; border-radius: 999px; border: 1px solid #dbe2ee; padding: 2px 8px; margin-right: 4px; font-size: 12px; }
+    .yes { color: #b91c1c; font-weight: 600; }
+    .no { color: #15803d; }
+    .link { color: #1d4ed8; cursor: pointer; font-weight: 600; }
+    .star { border: none; background: transparent; font-size: 16px; }
+    .star.on { color: #eab308; }
+    .footer { display: flex; justify-content: space-between; color: #64748b; font-size: 12px; padding: 10px; }
+    .error { color: #b91c1c; font-weight: 600; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <h2>会话总览（运营）- 实时数据库</h2>
+      <div class="meta" id="refreshMeta">每30秒自动刷新，距离下次30s</div>
+    </div>
+
+    <div class="kpi">
+      <div class="card"><div class="label">今日会话量</div><div id="kpi1" class="value">0</div></div>
+      <div class="card"><div class="label">平均首响时长</div><div id="kpi2" class="value">0m</div></div>
+      <div class="card"><div class="label">失败对话数</div><div id="kpi3" class="value">0</div></div>
+    </div>
+
+    <div class="toolbar">
+      <select id="fStatus">
+        <option value="all">状态: 全部</option><option value="new">new</option><option value="in_progress">in_progress</option><option value="resolved">resolved</option><option value="failed">failed</option>
+      </select>
+      <select id="fSensitive">
+        <option value="all">敏感: 全部</option><option value="yes">仅敏感命中</option><option value="no">仅无敏感</option>
+      </select>
+      <select id="fLevel">
+        <option value="all">等级: 全部</option><option value="Free">Free</option><option value="Silver">Silver</option><option value="Gold">Gold</option>
+      </select>
+      <select id="fSub">
+        <option value="all">订阅: 全部</option><option value="yes">已订阅</option><option value="no">未订阅</option>
+      </select>
+      <input id="search" placeholder="搜索客户ID 邮箱 关键词" />
+      <button class="primary" id="refresh">立即刷新</button>
+    </div>
+
+    <div class="batch">
+      <input id="checkAll" type="checkbox" />
+      <span id="sel">已选 0 条</span>
+      <button id="b1">批量标记已处理</button>
+      <button id="b2">批量加标签</button>
+      <button id="b3">批量导出</button>
+      <span id="error" class="error"></span>
+    </div>
+
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <th></th><th>重点</th><th>会话ID</th><th>客户信息</th><th>最近一条消息</th><th>最后活跃时间</th><th>状态</th><th>会员 订阅</th><th>敏感命中</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="footer"><span id="summary"></span><span>默认展示最新15条（真实数据）</span></div>
+    </div>
+  </div>
+
+  <script>
+    const state = { status: "all", sensitive: "all", level: "all", sub: "all", q: "", selected: new Set(), countdown: 30, rows: [] };
+
+    function fmt(iso) {
+      if (!iso) return "-";
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+
+    function setErr(msg) {
+      document.getElementById("error").textContent = msg || "";
+    }
+
+    async function fetchData() {
+      const qs = new URLSearchParams({
+        limit: "15",
+        status: state.status,
+        sensitive: state.sensitive,
+        level: state.level,
+        subscribed: state.sub,
+        q: state.q,
+        offset: "0",
+      });
+      const res = await fetch(`/api/overview?${qs.toString()}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "数据获取失败");
+      }
+      return res.json();
+    }
+
+    function drawRows(rows) {
+      const html = rows.map((x) => `
+        <tr>
+          <td><input type="checkbox" data-cb="${x.conversationId}" ${state.selected.has(x.conversationId) ? "checked" : ""}></td>
+          <td><button class="star ${x.important ? "on" : ""}">${x.important ? "★" : "☆"}</button></td>
+          <td><span class="link" data-open="${x.conversationId}">${x.conversationId}</span></td>
+          <td>${x.customerId || "-"} / ${x.nickname || "Unknown"}<br><span class="label">${x.emailMasked || "-"}</span></td>
+          <td><div class="msg" title="${(x.lastMessage || "").replace(/"/g, "&quot;")}">${x.lastMessage || "-"}</div></td>
+          <td>${fmt(x.lastActiveAt)}</td>
+          <td><span class="tag">${x.status}</span></td>
+          <td><span class="tag">${x.membershipLevel}</span><span class="tag">${x.isSubscribed ? "已订阅" : "未订阅"}</span></td>
+          <td>${x.sensitiveHit ? `<span class="yes">是(${x.sensitiveTypes.length}类)</span>` : `<span class="no">否</span>`}</td>
+          <td><button data-mark="${x.conversationId}">标记重点</button></td>
+        </tr>
+      `).join("");
+      document.getElementById("rows").innerHTML = html;
+    }
+
+    function refreshSelectedLabel() {
+      document.getElementById("sel").textContent = `已选 ${state.selected.size} 条`;
+      const ids = state.rows.map((x) => x.conversationId);
+      document.getElementById("checkAll").checked = ids.length > 0 && ids.every((id) => state.selected.has(id));
+    }
+
+    async function refreshData() {
+      try {
+        setErr("");
+        const payload = await fetchData();
+        state.rows = payload.rows || [];
+        document.getElementById("kpi1").textContent = payload.kpis.todayConversations;
+        document.getElementById("kpi2").textContent = `${payload.kpis.avgFirstReplyMinutes}m`;
+        document.getElementById("kpi3").textContent = payload.kpis.failedConversations;
+        document.getElementById("summary").textContent = `当前筛选命中 ${payload.total} 条会话（数据库实时查询）`;
+        drawRows(state.rows);
+        refreshSelectedLabel();
+      } catch (e) {
+        setErr(e.message);
+      }
+    }
+
+    function batchAction(name) {
+      if (state.selected.size === 0) {
+        alert("请先选择会话");
+        return;
+      }
+      alert(`${name} ${state.selected.size} 条（当前为演示动作）`);
+    }
+
+    document.getElementById("fStatus").addEventListener("change", async (e) => { state.status = e.target.value; await refreshData(); });
+    document.getElementById("fSensitive").addEventListener("change", async (e) => { state.sensitive = e.target.value; await refreshData(); });
+    document.getElementById("fLevel").addEventListener("change", async (e) => { state.level = e.target.value; await refreshData(); });
+    document.getElementById("fSub").addEventListener("change", async (e) => { state.sub = e.target.value; await refreshData(); });
+
+    let searchTimer = null;
+    document.getElementById("search").addEventListener("input", (e) => {
+      state.q = e.target.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(refreshData, 300);
+    });
+
+    document.getElementById("refresh").addEventListener("click", async () => { state.countdown = 30; await refreshData(); });
+    document.getElementById("b1").addEventListener("click", () => batchAction("批量标记已处理"));
+    document.getElementById("b2").addEventListener("click", () => batchAction("批量加标签"));
+    document.getElementById("b3").addEventListener("click", () => batchAction("批量导出"));
+
+    document.getElementById("checkAll").addEventListener("change", (e) => {
+      const ids = state.rows.map((x) => x.conversationId);
+      if (e.target.checked) ids.forEach((id) => state.selected.add(id));
+      else ids.forEach((id) => state.selected.delete(id));
+      refreshSelectedLabel();
+      drawRows(state.rows);
+    });
+
+    document.getElementById("rows").addEventListener("click", (e) => {
+      const cb = e.target.closest("[data-cb]");
+      if (cb) {
+        const id = cb.dataset.cb;
+        if (cb.checked) state.selected.add(id); else state.selected.delete(id);
+        refreshSelectedLabel();
+        return;
+      }
+
+      const open = e.target.closest("[data-open]");
+      if (open) {
+        alert(`进入会话详情 ${open.dataset.open}（下一步可接详情页）`);
+        return;
+      }
+
+      const mark = e.target.closest("[data-mark]");
+      if (mark) {
+        alert(`已标记重点: ${mark.dataset.mark}（下一步可接后端接口）`);
+      }
+    });
+
+    setInterval(async () => {
+      state.countdown -= 1;
+      if (state.countdown <= 0) {
+        state.countdown = 30;
+        await refreshData();
+      }
+      document.getElementById("refreshMeta").textContent = `每30秒自动刷新，距离下次${state.countdown}s`;
+    }, 1000);
+
+    refreshData();
+  </script>
+</body>
+</html>

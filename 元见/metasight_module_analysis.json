@@ -1,0 +1,977 @@
+{
+  "api_chat": {
+    "file_count": 4,
+    "sample_exports": [
+      "GET",
+      "POST"
+    ],
+    "io_signatures": [
+      {
+        "route": "app/api/chat/route.ts",
+        "method": "POST"
+      },
+      {
+        "route": "app/api/chat/followup/route.ts",
+        "method": "POST"
+      },
+      {
+        "route": "app/api/chat/followup/route.ts",
+        "schema": "zod-object"
+      },
+      {
+        "route": "app/api/chat/followup/route.ts",
+        "schema": "zod-object"
+      },
+      {
+        "route": "app/api/chat/autocomplete/route.ts",
+        "method": "POST"
+      },
+      {
+        "route": "app/api/chat/autocomplete/route.ts",
+        "schema": "zod-object"
+      },
+      {
+        "route": "app/api/chat/[id]/stream/route.ts",
+        "method": "GET"
+      }
+    ],
+    "calls_to_modules": {
+      "ai_engine": 7,
+      "service_chat": 4,
+      "data_schema": 2,
+      "service_entitlement": 1
+    }
+  },
+  "api_auth": {
+    "file_count": 1,
+    "sample_exports": [],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "api_cron": {
+    "file_count": 1,
+    "sample_exports": [
+      "GET"
+    ],
+    "io_signatures": [
+      {
+        "route": "app/api/cron/expire-subscriptions/route.ts",
+        "method": "GET"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 2
+    }
+  },
+  "web_app": {
+    "file_count": 230,
+    "sample_exports": [
+      "AURORA_STATIC_BACKGROUND",
+      "AXIS_RANGE",
+      "AccountSettings",
+      "AdminSidebar",
+      "AnalysisResultBlock",
+      "AnimatedDataPoint",
+      "AnimatedTrajectory",
+      "ArcMeter",
+      "AssistantMessage",
+      "AuroraBackground",
+      "Axes2D",
+      "BackButton",
+      "BaziCard",
+      "BaziChart",
+      "BaziConfirmClient",
+      "BaziConfirmation",
+      "BaziDetailClient",
+      "BaziFormDialog",
+      "BaziList",
+      "BaziPageClient",
+      "BillingPage",
+      "BirthDateTimeStep",
+      "BirthInfoSettings",
+      "BirthLocationStep",
+      "BlogCard",
+      "BlogNavbar",
+      "CHAT_INPUT_LAYOUT",
+      "CTAButton",
+      "CTASection",
+      "CardPair",
+      "CastLiuyaoResult",
+      "CategoriesSection",
+      "CategoryTabs",
+      "ChapterCard",
+      "ChapterContent",
+      "ChapterNav",
+      "ChartDisplayData",
+      "ChatHeader",
+      "ChatHome",
+      "ChatInput"
+    ],
+    "io_signatures": [
+      {
+        "action": "generateMetadata",
+        "args": "{ params, }: { params: Promise<{ locale: string }>; }",
+        "returns": "Metadata"
+      }
+    ],
+    "calls_to_modules": {
+      "service_star_map": 17,
+      "service_bazi": 14,
+      "data_schema": 12,
+      "service_entitlement": 11,
+      "stores": 10,
+      "service_referral": 7,
+      "blog_query": 6,
+      "service_auth": 5,
+      "service_chat": 5,
+      "ui_feature_ai": 5,
+      "ai_engine": 5,
+      "hooks_business": 4,
+      "service_subscription": 1
+    }
+  },
+  "ai_engine": {
+    "file_count": 26,
+    "sample_exports": [
+      "AI_CONFIG",
+      "AgentConfig",
+      "AgentUIMessage",
+      "BaziChart",
+      "BaziConclusion",
+      "BaziDayMaster",
+      "BaziDayun",
+      "BaziDetailOutput",
+      "BaziPillar",
+      "BaziPillars",
+      "BaziProfileItem",
+      "BuildContextOptions",
+      "ChapterContextInput",
+      "ChatMessageMetadata",
+      "ChatMode",
+      "EffectiveMode",
+      "HEXAGRAMS",
+      "Hexagram",
+      "ModelTier",
+      "QueryBaziErrorOutput",
+      "QueryBaziListOutput",
+      "QueryBaziOutput",
+      "SMOOTH_STREAM_CONFIG",
+      "ThinkingLevel",
+      "analyzeBazi",
+      "baziAnalysisRules",
+      "binaryToHexagram",
+      "buildChapterContext",
+      "buildContextFromAnalysis",
+      "castLiuyao",
+      "chapterPrompts",
+      "checkPromptSafety",
+      "classifyIntent",
+      "common",
+      "createDivinationAgent",
+      "createFallbackAgent",
+      "createFortuneAgent",
+      "createGuardAgent",
+      "createListenAgent",
+      "divinationInstructions"
+    ],
+    "io_signatures": [
+      {
+        "action": "generateTitle",
+        "args": "userText: string",
+        "returns": "string"
+      },
+      {
+        "action": "generateAutocompletion",
+        "args": "{ text, signal, }: AutocompleteRequest",
+        "returns": "string"
+      },
+      {
+        "action": "generateFollowupSuggestions",
+        "args": "{ messages, signal, }: FollowupRequest",
+        "returns": "string[]"
+      },
+      {
+        "action": "classifyIntent",
+        "args": "messages: UIMessage[],",
+        "returns": "EffectiveMode"
+      },
+      {
+        "action": "generateChapter",
+        "args": "chapterType: ChapterType, context: ChapterContextInput,",
+        "returns": "ReportChapter | null"
+      },
+      {
+        "action": "getAgentByMode",
+        "args": "mode: ChatMode, messages: UIMessage[], tier: Tier,",
+        "returns": "AgentResult"
+      }
+    ],
+    "calls_to_modules": {
+      "service_bazi": 1,
+      "data_schema": 1
+    }
+  },
+  "service_chat": {
+    "file_count": 5,
+    "sample_exports": [
+      "deleteThreadAction",
+      "ensureThread",
+      "generateThreadTitle",
+      "getActiveStreamId",
+      "getRecentMessages",
+      "getStreamingErrorMessage",
+      "getThreadMessages",
+      "getThreadWithMessages",
+      "getUserThreads",
+      "handleChatApiError",
+      "persistChatRound",
+      "saveMessages",
+      "saveUserMessage",
+      "setFeedbackAction",
+      "submitDislikeFeedbackAction",
+      "toggleThreadPin",
+      "toggleThreadPinAction",
+      "truncateMessagesFrom",
+      "updateActiveStreamId",
+      "updateThreadTitle",
+      "updateThreadTitleAction"
+    ],
+    "io_signatures": [
+      {
+        "action": "setFeedbackAction",
+        "args": "messageId: string, type: FeedbackType,",
+        "returns": "ActionResult<{ feedback: FeedbackType }"
+      },
+      {
+        "action": "submitDislikeFeedbackAction",
+        "args": "messageId: string, formData: FormData,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "getUserThreads",
+        "args": ") => { const { user } = await getRequiredSession(); return withRetry(() => db .select({ id: chatThreads.id, title: chatT...",
+        "returns": "UIMessage[]"
+      },
+      {
+        "action": "deleteThreadAction",
+        "args": "threadId: string,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "updateThreadTitleAction",
+        "args": "threadId: string, title: string,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "toggleThreadPinAction",
+        "args": "threadId: string,",
+        "returns": "ActionResultVoid"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 10,
+      "ai_engine": 2
+    }
+  },
+  "service_bazi": {
+    "file_count": 4,
+    "sample_exports": [
+      "BaziRecord",
+      "EnrichedBaziRecord",
+      "ProfileQuotaInfo",
+      "archiveBaziAction",
+      "archiveBaziRecord",
+      "checkBaziNameExists",
+      "checkUserHasProfile",
+      "createBaziAction",
+      "createBaziRecord",
+      "deleteBaziAction",
+      "deleteBaziRecord",
+      "duplicateBaziAction",
+      "enrichBaziRecord",
+      "enrichBaziRecords",
+      "generateUniqueName",
+      "getBaziByName",
+      "getBaziByNames",
+      "getBaziRecord",
+      "getCurrentUserProfileQuota",
+      "getUserBaziRecordCount",
+      "getUserBaziRecords",
+      "getUserPrimaryBazi",
+      "syncBaziFromProfile",
+      "toggleBaziPinned",
+      "toggleBaziPinnedAction",
+      "updateBaziAction",
+      "updateBaziRecord"
+    ],
+    "io_signatures": [
+      {
+        "action": "checkUserHasProfile",
+        "args": ") => { const { user } = await getRequiredSession(); const [profile] = await withRetry(() => db .select({ birthAt: userPr...",
+        "returns": "boolean"
+      },
+      {
+        "action": "getUserBaziRecordCount",
+        "args": "userId: string,",
+        "returns": "number"
+      },
+      {
+        "action": "getCurrentUserProfileQuota",
+        "args": "",
+        "returns": "ProfileQuotaInfo"
+      },
+      {
+        "action": "createBaziAction",
+        "args": "input: CreateBaziInput,",
+        "returns": "ActionResult<BaziRecord"
+      },
+      {
+        "action": "toggleBaziPinnedAction",
+        "args": "id: string,",
+        "returns": "ActionResult<BaziRecord"
+      },
+      {
+        "action": "deleteBaziAction",
+        "args": "id: string",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "archiveBaziAction",
+        "args": "id: string,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "duplicateBaziAction",
+        "args": "id: string,",
+        "returns": "ActionResult<BaziRecord"
+      },
+      {
+        "action": "updateBaziAction",
+        "args": "id: string, input: UpdateBaziInput,",
+        "returns": "ActionResult<BaziRecord"
+      },
+      {
+        "action": "createBaziRecord",
+        "args": "input: CreateBaziInput) => { const [record] = await withRetry(() => db .insert(baziRecords) .values({ userId: input.user...",
+        "returns": "\"created\" | \"updated\""
+      },
+      {
+        "action": "generateUniqueName",
+        "args": "userId: string, baseName: string,",
+        "returns": "string"
+      },
+      {
+        "action": "getUserPrimaryBazi",
+        "args": "userId: string) => { const [record] = await withRetry(() => db .select() .from(baziRecords) .where( and( eq(baziRecords....",
+        "returns": "boolean"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 11
+    }
+  },
+  "service_star_map": {
+    "file_count": 7,
+    "sample_exports": [
+      "GenerateAndSaveInput",
+      "GenerateReportInput",
+      "GetUserReportsOptions",
+      "GetUserReportsResult",
+      "ReportDetailData",
+      "ReportListItem",
+      "ReportProgressData",
+      "StarMapRecord",
+      "StarMapReportRecord",
+      "countCompletedChapters",
+      "createEmptyReport",
+      "createStarMapReport",
+      "deleteAndRegenerateStarMap",
+      "deleteReportAction",
+      "deleteStarMap",
+      "deleteStarMapReport",
+      "deriveAllChapterStatuses",
+      "deriveAnalysis",
+      "deriveChapterStatus",
+      "deriveReportStatus",
+      "generateAndSaveStarMap",
+      "generateReportInBackground",
+      "generateSingleChapter",
+      "getChapterByIndex",
+      "getLatestUserReport",
+      "getReportById",
+      "getReportForView",
+      "getReportProgress",
+      "getUserReports",
+      "getUserStarMap",
+      "hasUserStarMap",
+      "startReportGeneration",
+      "updateReportChapter",
+      "upsertStarMap"
+    ],
+    "io_signatures": [
+      {
+        "action": "getUserStarMap",
+        "args": "",
+        "returns": "StarMapRecord | null"
+      },
+      {
+        "action": "getLatestUserReport",
+        "args": "starMapId: string,",
+        "returns": "StarMapReportRecord | null"
+      },
+      {
+        "action": "hasUserStarMap",
+        "args": "",
+        "returns": "boolean"
+      },
+      {
+        "action": "getReportById",
+        "args": "reportId: string,",
+        "returns": "StarMapReportRecord | null"
+      },
+      {
+        "action": "getUserReports",
+        "args": "options: GetUserReportsOptions = {},",
+        "returns": "GetUserReportsResult"
+      },
+      {
+        "action": "getReportForView",
+        "args": "reportId: string,",
+        "returns": "ReportDetailData | null"
+      },
+      {
+        "action": "generateAndSaveStarMap",
+        "args": "input: GenerateAndSaveInput,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "deleteAndRegenerateStarMap",
+        "args": "",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "generateSingleChapter",
+        "args": "reportId: string, chapterType: ChapterType,",
+        "returns": "ActionResult<ReportChapter"
+      },
+      {
+        "action": "startReportGeneration",
+        "args": "",
+        "returns": "ActionResult<{ reportId: string }"
+      },
+      {
+        "action": "getReportProgress",
+        "args": "reportId: string,",
+        "returns": "ActionResult<ReportProgressData"
+      },
+      {
+        "action": "deleteReportAction",
+        "args": "reportId: string,",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "upsertStarMap",
+        "args": "userId: string, config: StarMapConfig, system: \"bazi\" = \"bazi\",",
+        "returns": "typeof starMaps.$inferSelect"
+      },
+      {
+        "action": "createStarMapReport",
+        "args": "userId: string, starMapId: string, report: DeepReportData,",
+        "returns": "typeof starMapReports.$inferSelect"
+      },
+      {
+        "action": "createEmptyReport",
+        "args": "userId: string, starMapId: string, version: string,",
+        "returns": "typeof starMapReports.$inferSelect"
+      },
+      {
+        "action": "updateReportChapter",
+        "args": "reportId: string, chapterType: ChapterType, item: PresentationItem,",
+        "returns": "void"
+      },
+      {
+        "action": "deleteStarMap",
+        "args": "userId: string",
+        "returns": "void"
+      },
+      {
+        "action": "deleteStarMapReport",
+        "args": "reportId: string",
+        "returns": "void"
+      },
+      {
+        "action": "generateReportInBackground",
+        "args": "{ reportId, analysis, config, locale, }: GenerateReportInput",
+        "returns": "void"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 4,
+      "ai_engine": 2
+    }
+  },
+  "service_entitlement": {
+    "file_count": 5,
+    "sample_exports": [
+      "QuotaInfo",
+      "QuotaInput",
+      "ReferralUnlockProgress",
+      "ReferralUnlockResult",
+      "SettingsData",
+      "StarMapAccessInfo",
+      "calculateQuotaInfo",
+      "checkChatQuota",
+      "checkFeatureAccess",
+      "checkReferralUnlock",
+      "getCurrentFeatureAccess",
+      "getCurrentStarMapAccessInfo",
+      "getCurrentUserQuota",
+      "getCurrentUserTier",
+      "getCurrentUserTierConfig",
+      "getSettingsData",
+      "getStarMapAccessInfo",
+      "getUserQuota",
+      "getUserTier",
+      "getUserTierConfig"
+    ],
+    "io_signatures": [
+      {
+        "action": "getSettingsData",
+        "args": "",
+        "returns": "SettingsData"
+      },
+      {
+        "action": "getUserTier",
+        "args": "userId: string",
+        "returns": "Tier"
+      },
+      {
+        "action": "getUserTierConfig",
+        "args": "userId: string,",
+        "returns": "TierConfig"
+      },
+      {
+        "action": "getCurrentUserTierConfig",
+        "args": "",
+        "returns": "TierConfig"
+      },
+      {
+        "action": "checkReferralUnlock",
+        "args": "userId: string, featureKey: FeatureKey,",
+        "returns": "ReferralUnlockResult"
+      },
+      {
+        "action": "checkFeatureAccess",
+        "args": "userId: string, featureKey: FeatureKey,",
+        "returns": "boolean"
+      },
+      {
+        "action": "getCurrentFeatureAccess",
+        "args": "featureKey: FeatureKey,",
+        "returns": "boolean"
+      },
+      {
+        "action": "getUserQuota",
+        "args": "userId: string, quotaType: QuotaType,",
+        "returns": "QuotaInfo"
+      },
+      {
+        "action": "getCurrentUserQuota",
+        "args": "quotaType: QuotaType,",
+        "returns": "QuotaInfo"
+      },
+      {
+        "action": "checkChatQuota",
+        "args": "userId: string, effectiveMode: EffectiveMode,",
+        "returns": "{ allowed: true } | { allowed: false; quota: QuotaInfo }"
+      },
+      {
+        "action": "getCurrentUserTier",
+        "args": "",
+        "returns": "UserTier"
+      },
+      {
+        "action": "getStarMapAccessInfo",
+        "args": "userId: string,",
+        "returns": "StarMapAccessInfo"
+      },
+      {
+        "action": "getCurrentStarMapAccessInfo",
+        "args": "",
+        "returns": "StarMapAccessInfo"
+      }
+    ],
+    "calls_to_modules": {
+      "ai_engine": 1
+    }
+  },
+  "service_subscription": {
+    "file_count": 4,
+    "sample_exports": [
+      "SubscriptionDetails",
+      "SubscriptionMutationResult",
+      "UpsertSubscriptionInput",
+      "deleteSubscription",
+      "devActivateSubscription",
+      "devCancelSubscription",
+      "devClearSubscription",
+      "devClearUsage",
+      "devExpireSubscription",
+      "devFillUsage",
+      "devGetAdminStatus",
+      "devGetCurrentTier",
+      "devReactivateSubscription",
+      "devToggleAdmin",
+      "getCurrentSubscriptionDetails",
+      "getSubscriptionByUserId",
+      "getSubscriptionDetails",
+      "getValidSubscription",
+      "updateSubscriptionStatus",
+      "upsertSubscription",
+      "upsertSubscriptionTx"
+    ],
+    "io_signatures": [
+      {
+        "action": "getValidSubscription",
+        "args": "userId: string) => { const now = new Date(); const [subscription] = await withRetry(() => db .select() .from(creemSubscr...",
+        "returns": "SubscriptionDetails | null"
+      },
+      {
+        "action": "getCurrentSubscriptionDetails",
+        "args": "",
+        "returns": "SubscriptionDetails | null"
+      },
+      {
+        "action": "upsertSubscriptionTx",
+        "args": "tx: Transaction, userId: string, data: UpsertSubscriptionInput, ) => { const [existing] = await tx .select() .from(creem...",
+        "returns": "SubscriptionMutationResult"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 6
+    }
+  },
+  "service_auth": {
+    "file_count": 2,
+    "sample_exports": [
+      "ChangePasswordFormState",
+      "ForgetPasswordFormState",
+      "ResetPasswordFormState",
+      "SetPasswordFormState",
+      "SignUpFormState",
+      "changePasswordAction",
+      "checkEmailVerifiedAction",
+      "checkUserHasPassword",
+      "claimBridgeTokenAction",
+      "forgetPasswordAction",
+      "getLinkedAccounts",
+      "resetPasswordAction",
+      "sendPasswordResetAction",
+      "setPasswordAction",
+      "signUpAction",
+      "storeMagicLinkClaimAction"
+    ],
+    "io_signatures": [
+      {
+        "action": "checkUserHasPassword",
+        "args": "",
+        "returns": "boolean"
+      },
+      {
+        "action": "forgetPasswordAction",
+        "args": "_: ForgetPasswordFormState, formData: FormData,",
+        "returns": "ForgetPasswordFormState"
+      },
+      {
+        "action": "resetPasswordAction",
+        "args": "_: ResetPasswordFormState, formData: FormData,",
+        "returns": "ResetPasswordFormState"
+      },
+      {
+        "action": "changePasswordAction",
+        "args": "_: ChangePasswordFormState, formData: FormData,",
+        "returns": "ChangePasswordFormState"
+      },
+      {
+        "action": "setPasswordAction",
+        "args": "_: SetPasswordFormState, formData: FormData,",
+        "returns": "SetPasswordFormState"
+      },
+      {
+        "action": "sendPasswordResetAction",
+        "args": "",
+        "returns": "ActionResultVoid"
+      },
+      {
+        "action": "checkEmailVerifiedAction",
+        "args": "email: string,",
+        "returns": "boolean"
+      },
+      {
+        "action": "signUpAction",
+        "args": "_: SignUpFormState, formData: FormData,",
+        "returns": "SignUpFormState"
+      },
+      {
+        "action": "storeMagicLinkClaimAction",
+        "args": "email: string, claimId: string, claimNonce: string,",
+        "returns": "void"
+      },
+      {
+        "action": "claimBridgeTokenAction",
+        "args": "claimId: string, claimNonce: string,",
+        "returns": "{ token: string } | null"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 4,
+      "service_referral": 1
+    }
+  },
+  "service_referral": {
+    "file_count": 4,
+    "sample_exports": [
+      "REFERRAL_CODE_CHARSET",
+      "REFERRAL_CODE_LENGTH",
+      "REFERRAL_REWARD_CREDITS",
+      "ReferralInfo",
+      "createReferralRecord",
+      "ensureReferralCode",
+      "findReferralCodeByCode",
+      "getReferralCode",
+      "getReferralInfo",
+      "getReferralStats",
+      "grantReferralRewardForUser",
+      "hasBeenReferred",
+      "isReferralCodeExists",
+      "validateReferralCodeAction"
+    ],
+    "io_signatures": [
+      {
+        "action": "findReferralCodeByCode",
+        "args": "code: string,",
+        "returns": "{ id: string; ownerId: string } | null"
+      },
+      {
+        "action": "isReferralCodeExists",
+        "args": "code: string",
+        "returns": "boolean"
+      },
+      {
+        "action": "getReferralCode",
+        "args": "userId: string,",
+        "returns": "string | null"
+      },
+      {
+        "action": "getReferralStats",
+        "args": "userId: string,",
+        "returns": "{ totalInvited: number; totalRewardsEarned: number }"
+      },
+      {
+        "action": "hasBeenReferred",
+        "args": "inviteeId: string",
+        "returns": "boolean"
+      },
+      {
+        "action": "getReferralInfo",
+        "args": "userId: string,",
+        "returns": "ReferralInfo"
+      },
+      {
+        "action": "validateReferralCodeAction",
+        "args": "code: string,",
+        "returns": "{ valid: boolean }"
+      },
+      {
+        "action": "ensureReferralCode",
+        "args": "userId: string",
+        "returns": "string"
+      },
+      {
+        "action": "createReferralRecord",
+        "args": "inviteeId: string, referrerCode: string,",
+        "returns": "{ success: boolean; codeId?: string }"
+      },
+      {
+        "action": "grantReferralRewardForUser",
+        "args": "inviteeId: string,",
+        "returns": "{ success: boolean; inviterId?: string }"
+      }
+    ],
+    "calls_to_modules": {
+      "data_schema": 4
+    }
+  },
+  "data_schema": {
+    "file_count": 5,
+    "sample_exports": [
+      "Account",
+      "BaziRecord",
+      "BaziTag",
+      "ChatMessage",
+      "ChatThread",
+      "CreditType",
+      "Credits",
+      "CreemSubscription",
+      "DEFAULT_CREDITS",
+      "GeoPoint",
+      "NewAccount",
+      "NewBaziRecord",
+      "NewChatMessage",
+      "NewChatThread",
+      "NewCreemSubscription",
+      "NewRedemptionCode",
+      "NewRedemptionHistory",
+      "NewReferral",
+      "NewReferralCode",
+      "NewSession",
+      "NewStarMap",
+      "NewUser",
+      "NewUserProfile",
+      "NewVerification",
+      "ProfileInfo",
+      "RedemptionCode",
+      "RedemptionHistory",
+      "Referral",
+      "ReferralCode",
+      "Session",
+      "StarMap",
+      "User",
+      "UserProfile",
+      "Verification",
+      "accounts",
+      "baziRecords",
+      "chatMessages",
+      "chatThreads",
+      "creemSubscriptions",
+      "db"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "db_migrations": {
+    "file_count": 0,
+    "sample_exports": [],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "i18n": {
+    "file_count": 0,
+    "sample_exports": [],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "content_blog": {
+    "file_count": 0,
+    "sample_exports": [],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "blog_query": {
+    "file_count": 2,
+    "sample_exports": [
+      "Author",
+      "Category",
+      "authors",
+      "categories",
+      "formatDate",
+      "formatDateMinimal",
+      "getAlternateLocalePost",
+      "getAuthor",
+      "getAuthorWithLocale",
+      "getCategoryLabel",
+      "getFeaturedPosts",
+      "getPostBySlug",
+      "getPostsByCategory",
+      "getPostsByLocale",
+      "getReadingTime"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "ui_feature_ai": {
+    "file_count": 1,
+    "sample_exports": [
+      "ChatMode",
+      "ModeSwitcher",
+      "getModeColor",
+      "getModeRingClass",
+      "getModeTooltip",
+      "getNextMode"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "hooks_business": {
+    "file_count": 6,
+    "sample_exports": [
+      "FortuneOption",
+      "FortuneType",
+      "MentionCategory",
+      "MentionableItem",
+      "PaidTier",
+      "fortuneOptions",
+      "useChatThread",
+      "useDailyVisit",
+      "useFortuneSelector",
+      "useSubscription"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {
+      "ui_feature_ai": 1,
+      "ai_engine": 1
+    }
+  },
+  "stores": {
+    "file_count": 3,
+    "sample_exports": [
+      "NotificationItem",
+      "NotificationType",
+      "TransitionType",
+      "clearAllNotifications",
+      "clearNotification",
+      "notificationColors",
+      "notificationTextColors",
+      "removeNotification",
+      "useNotification",
+      "useNotificationStore",
+      "useStarMapCamera",
+      "useStarMapDimensions",
+      "useStarMapSelection",
+      "useStarMapTimeMachine",
+      "useStarMapView",
+      "useViewStore"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {}
+  },
+  "e2e_test": {
+    "file_count": 16,
+    "sample_exports": [
+      "E2EScenarioKey",
+      "E2E_SCENARIOS",
+      "MOCK_RESPONSES",
+      "MockErrorType",
+      "TEST_ACCOUNT",
+      "TEST_ID_PREFIX",
+      "TEST_PROFILE",
+      "TEST_SESSION",
+      "TEST_USER",
+      "cleanupTestUser",
+      "createScenarioBody",
+      "createStreamBody",
+      "createTestUser",
+      "createTestUserProfile",
+      "isTestData",
+      "mockChatError",
+      "mockChatScenario",
+      "mockChatSuccess",
+      "test",
+      "testUserExists"
+    ],
+    "io_signatures": [],
+    "calls_to_modules": {
+      "data_schema": 2
+    }
+  }
+}

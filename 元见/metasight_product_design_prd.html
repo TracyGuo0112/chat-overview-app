@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetaSight 产品设计PRD（可落地版）</title>
+  <style>
+    :root { --bg:#0b1020; --card:#131a2e; --text:#e7ecff; --muted:#9fb0d8; --line:#2a365c; --brand:#6ea8fe; --ok:#5ad8a6; --warn:#ffd166; }
+    body { margin:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif; background:#0a0f1d; color:var(--text); line-height:1.65; }
+    .wrap { max-width: 1160px; margin:0 auto; padding: 28px 24px 80px; }
+    h1,h2,h3,h4 { line-height:1.3; margin: 20px 0 12px; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 24px; border-left:4px solid var(--brand); padding-left:10px; margin-top:36px; }
+    h3 { font-size: 18px; color:#cfe0ff; }
+    .meta, .note { color:var(--muted); }
+    .card { background: var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin:12px 0; }
+    table { width:100%; border-collapse: collapse; margin:10px 0 18px; font-size:14px; }
+    th, td { border:1px solid var(--line); padding:10px; vertical-align:top; }
+    th { background:#182242; text-align:left; }
+    ul { margin:8px 0 10px 22px; }
+    pre { background:#0f1630; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; }
+    .kpi { display:grid; grid-template-columns: repeat(4,minmax(180px,1fr)); gap:10px; }
+    .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:2px 10px; color:var(--muted); font-size:12px; margin-right:6px; }
+    .ok { color:var(--ok); } .warn{ color:var(--warn); }
+    .toc a{ color:#b9cbff; text-decoration:none; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>MetaSight（元见）产品设计 PRD（可直接落地版）</h1>
+    <p class="meta">版本：V1.0 ｜ 依据：<code>metasight_PRD_reconstructed.md</code>逆向还原与产品化整合 ｜ 输出目标：可评审、可排期、可交付研发</p>
+
+    <div class="card toc">
+      <h3>目录</h3>
+      <p><a href="#s1">1. 产品定义与范围</a> ｜ <a href="#s2">2. 目标与指标</a> ｜ <a href="#s3">3. 用户与场景</a> ｜ <a href="#s4">4. 产品架构图</a> ｜ <a href="#s5">5. 核心流程图</a> ｜ <a href="#s6">6. 功能详细设计</a> ｜ <a href="#s7">7. 页面与交互规范</a> ｜ <a href="#s8">8. API与数据结构</a> ｜ <a href="#s9">9. 非功能与安全</a> ｜ <a href="#s10">10. 交付排期</a> ｜ <a href="#s11">11. 风险与待确认</a> ｜ <a href="#s12">12. 验收标准</a></p>
+    </div>
+
+    <h2 id="s1">1. 产品定义与范围</h2>
+    <div class="card">
+      <h3>1.1 产品定位</h3>
+      <p>MetaSight 是面向 18-35 岁用户的 AI 命理决策辅助产品，核心价值是让用户以“即时提问 → 连续追问 → 资产沉淀”的方式完成关键人生议题判断。</p>
+      <h3>1.2 In Scope</h3>
+      <ul>
+        <li>账号认证（注册/登录/验证/找回）</li>
+        <li>AI 对话咨询（流式回复、追问建议、输入补全）</li>
+        <li>会话资产（线程复访、编辑重发、续接恢复）</li>
+        <li>八字档案管理（建档、标签、置顶、归档）</li>
+        <li>星图报告（生成、进度、章节重试）</li>
+        <li>订阅权益（边界提示、升级回跳、到期回收）</li>
+        <li>增长模块（邀请裂变 + 博客内容 + 多语言）</li>
+      </ul>
+      <h3>1.3 Out of Scope</h3>
+      <ul><li>人工咨询师实时接管</li><li>企业多租户</li><li>原生 App 首发</li></ul>
+    </div>
+
+    <h2 id="s2">2. 目标与指标</h2>
+    <div class="kpi">
+      <div class="card"><b>激活</b><br/>注册后24h首问率<br/><span class="ok">目标：持续提升</span></div>
+      <div class="card"><b>留存</b><br/>D1 / D7 留存率<br/><span class="ok">目标：稳定提升</span></div>
+      <div class="card"><b>转化</b><br/>触顶升级率、续费率<br/><span class="ok">目标：形成闭环</span></div>
+      <div class="card"><b>可靠性</b><br/>咨询完成率、恢复成功率<br/><span class="ok">目标：异常可恢复</span></div>
+    </div>
+    <table>
+      <tr><th>目标</th><th>用户结果</th><th>主指标</th><th>观察周期</th></tr>
+      <tr><td>首问价值触达</td><td>用户首次提问能获得可读结果</td><td>首问完成率</td><td>日/周</td></tr>
+      <tr><td>持续使用</td><td>用户形成多轮追问</td><td>人均有效会话轮次</td><td>周</td></tr>
+      <tr><td>商业闭环</td><td>边界触达后可做清晰决策</td><td>触顶升级率</td><td>周/月</td></tr>
+      <tr><td>深度交付</td><td>报告最终可完成</td><td>报告完成率</td><td>周</td></tr>
+    </table>
+
+    <h2 id="s3">3. 用户与场景</h2>
+    <table>
+      <tr><th>角色</th><th>核心目标</th><th>关键行为</th><th>成功定义</th></tr>
+      <tr><td>访客</td><td>判断价值</td><td>浏览首页/博客，进入注册</td><td>完成注册或留资回访</td></tr>
+      <tr><td>新注册用户</td><td>完成首问</td><td>发起问题并收到回答</td><td>24h 内完成至少1轮</td></tr>
+      <tr><td>持续用户</td><td>沉淀资产</td><td>复访线程、维护档案</td><td>复访率上升</td></tr>
+      <tr><td>触顶用户</td><td>做升级决策</td><td>看边界解释、比较方案</td><td>升级后回到原任务</td></tr>
+      <tr><td>运营</td><td>提升增长效率</td><td>优化内容/邀请路径</td><td>新增与转化改善</td></tr>
+    </table>
+
+    <h2 id="s4">4. 产品架构图</h2>
+    <div class="card">
+      <h3>4.1 业务架构（Mermaid）</h3>
+      <pre class="mermaid">flowchart LR
+      U[用户端 Web] --> A[账号域
+登录/注册/验证]
+      U --> C[咨询域
+对话/追问/续接]
+      U --> B[命理域
+八字档案/星图报告]
+      U --> S[设置域
+账户/出生信息/订阅/关联账号]
+      U --> G[增长域
+博客/邀请]
+      C --> E[权益决策
+额度/套餐/升级]
+      B --> E
+      E --> P[支付与订阅状态]
+      P --> E
+      C --> D[会话资产沉淀]
+      B --> D
+      D --> U</pre>
+
+      <h3>4.2 逻辑分层架构（可落地）</h3>
+      <pre>接入层：Web 页面 / API 路由
+业务层：认证、对话、档案、报告、权益、邀请、内容
+策略层：边界策略、风险拦截、降级与恢复策略
+数据层：用户、会话、档案、报告、订阅、奖励
+运营层：埋点分析、实验优化、内容运营、活动策略</pre>
+    </div>
+
+    <h2 id="s5">5. 核心流程图</h2>
+    <div class="card">
+      <h3>5.1 首问到多轮咨询流程（时序图）</h3>
+      <pre class="mermaid">sequenceDiagram
+      participant User as 用户
+      participant Web as 前端页面
+      participant Chat as 咨询能力
+      participant Ent as 权益判定
+      User->>Web: 输入问题并发送
+      Web->>Ent: 检查可用额度
+      Ent-->>Web: 可用/受限
+      alt 可用
+        Web->>Chat: 发起咨询
+        Chat-->>Web: 流式返回内容
+        Web-->>User: 逐段展示结果
+        User->>Web: 继续追问
+      else 受限
+        Web-->>User: 展示边界与升级入口
+      end</pre>
+
+      <h3>5.2 星图报告流程（状态流转）</h3>
+      <pre>未开始 -> 生成中 -> 部分完成 -> 全部完成
+                 \-> 章节失败 -> 单章重试 -> 部分完成/全部完成</pre>
+
+      <h3>5.3 升级回跳流程（时序图）</h3>
+      <pre class="mermaid">sequenceDiagram
+      participant User as 用户
+      participant Web as 页面
+      participant Pay as 订阅/支付
+      User->>Web: 在任务中继续操作
+      Web-->>User: 提示已触达边界
+      User->>Pay: 选择升级并支付
+      Pay-->>Web: 返回成功状态
+      Web-->>User: 回到原任务位置继续执行</pre>
+    </div>
+
+    <h2 id="s6">6. 功能详细设计（可直接拆任务）</h2>
+
+    <h3>6.1 账号认证</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>用户需要低门槛进入，同时保障身份可验证、可找回、可追溯。</td></tr>
+      <tr><td>触发条件</td><td>点击登录/注册/忘记密码；访问受限页面。</td></tr>
+      <tr><td>主流程</td><td>进入认证页 → 提交身份信息 → 完成验证 → 回跳原任务。</td></tr>
+      <tr><td>异常兜底</td><td>链接过期可重发；失败可切换认证方式；回跳失败给“返回上次任务”入口。</td></tr>
+      <tr><td>影响</td><td>直接影响激活率与后续资产沉淀成功率。</td></tr>
+    </table>
+
+    <h3>6.2 AI 对话咨询</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>用户希望即时得到可读答复，并支持连续追问。</td></tr>
+      <tr><td>触发条件</td><td>发送消息；选择模式；触达配额边界。</td></tr>
+      <tr><td>主流程</td><td>发送问题 → 流式返回 → 阅读并追问 → 会话沉淀。</td></tr>
+      <tr><td>异常兜底</td><td>中断可继续；失败可重试；边界展示升级方案；输出异常给替代反馈。</td></tr>
+      <tr><td>影响</td><td>激活、留存、升级三项核心指标的共同驱动。</td></tr>
+    </table>
+
+    <h3>6.3 会话资产（线程复访/编辑重发）</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>用户跨时间继续思考，需要上下文一致。</td></tr>
+      <tr><td>触发条件</td><td>打开历史线程；编辑旧消息；中断后重进。</td></tr>
+      <tr><td>主流程</td><td>进入线程 → 复访 → 编辑重发（如需）→ 新结果覆盖后续。</td></tr>
+      <tr><td>异常兜底</td><td>恢复失败时从最后完整节点继续；误操作可二次确认。</td></tr>
+      <tr><td>影响</td><td>提升复访率和长期付费意愿。</td></tr>
+    </table>
+
+    <h3>6.4 八字档案</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>多对象咨询需要复用资料，避免重复输入。</td></tr>
+      <tr><td>触发条件</td><td>创建/编辑/归档/删除；咨询中引用档案。</td></tr>
+      <tr><td>主流程</td><td>创建档案 → 校验保存 → 列表管理 → 咨询时引用。</td></tr>
+      <tr><td>异常兜底</td><td>字段错误即时提示；超上限给“整理/升级”路径；删除确认。</td></tr>
+      <tr><td>影响</td><td>提升咨询效率与答案贴合度。</td></tr>
+    </table>
+
+    <h3>6.5 星图报告</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>用户需要结构化深度结论，不接受“失败后全部重来”。</td></tr>
+      <tr><td>触发条件</td><td>发起报告；查看进度；重试失败章节。</td></tr>
+      <tr><td>主流程</td><td>发起生成 → 进度可视 → 部分可读 → 全部完成。</td></tr>
+      <tr><td>异常兜底</td><td>章节失败单独重试；长时间处理中保留状态可见。</td></tr>
+      <tr><td>影响</td><td>影响高价值体验和续费满意度。</td></tr>
+    </table>
+
+    <h3>6.6 订阅权益与边界决策</h3>
+    <table>
+      <tr><th>项</th><th>定义</th></tr>
+      <tr><td>设计背景</td><td>用户需要理解“为何受限、升级后得到什么”。</td></tr>
+      <tr><td>触发条件</td><td>触达额度边界；订阅到期；续费成功。</td></tr>
+      <tr><td>主流程</td><td>边界提示 → 方案比较 → 升级支付 → 回到原任务。</td></tr>
+      <tr><td>异常兜底</td><td>状态延迟可刷新；取消升级保留上下文；到期前预告。</td></tr>
+      <tr><td>影响</td><td>直接决定升级转化与投诉率。</td></tr>
+    </table>
+
+    <h3>6.7 邀请裂变与博客多语言</h3>
+    <table>
+      <tr><th>功能</th><th>触发</th><th>主流程</th><th>异常兜底</th><th>业务影响</th></tr>
+      <tr><td>邀请裂变</td><td>分享邀请码/输入邀请码</td><td>分享→校验→生效→奖励展示</td><td>无效码提示、延迟到账状态</td><td>降低获客成本</td></tr>
+      <tr><td>博客多语言</td><td>访客进入内容页</td><td>浏览→认知→CTA→注册/首问</td><td>语言回退、失效内容推荐</td><td>提升自然流量转化</td></tr>
+    </table>
+
+    <h2 id="s7">7. 页面与交互规范</h2>
+    <div class="card">
+      <p><span class="pill">页面状态统一要求</span>空态 / 进行态 / 成功态 / 失败态 / 边界态（适用时）</p>
+      <p><span class="pill">交互原则</span>任何失败都给下一步动作；任何跨页面动作都要回到原任务上下文。</p>
+      <h3>关键页面清单</h3>
+      <ul>
+        <li>Landing：首页价值表达与转化入口</li>
+        <li>Auth：登录注册与验证回跳</li>
+        <li>Chat：线程列表、消息流、输入编辑、模式切换</li>
+        <li>Bazi：档案列表、筛选、编辑弹窗</li>
+        <li>StarMap：进度视图、章节阅读、失败重试</li>
+        <li>Settings：账户、出生信息、订阅、关联账户</li>
+      </ul>
+    </div>
+
+    <h2 id="s8">8. API 与关键数据结构</h2>
+    <h3>8.1 API 契约（产品层）</h3>
+    <table>
+      <tr><th>接口</th><th>调用场景</th><th>输入</th><th>输出</th><th>失败语义</th></tr>
+      <tr><td>POST /api/chat</td><td>发问/追问</td><td>messages, threadId, mode</td><td>流式回答</td><td>quota_exceeded / retryable_error</td></tr>
+      <tr><td>POST /api/chat/followup</td><td>追问建议</td><td>消息上下文</td><td>建议列表</td><td>degrade_to_manual_input</td></tr>
+      <tr><td>POST /api/chat/autocomplete</td><td>输入补全</td><td>当前文本</td><td>补全内容</td><td>ignore_and_continue</td></tr>
+      <tr><td>GET /api/chat/{id}/stream</td><td>中断续接</td><td>thread/stream context</td><td>续接内容流</td><td>resume_failed_then_retry</td></tr>
+      <tr><td>/api/auth/*</td><td>登录注册验证</td><td>身份信息</td><td>认证状态</td><td>link_expired / validation_error</td></tr>
+      <tr><td>/api/cron/expire-subscriptions</td><td>到期回收</td><td>定时任务触发</td><td>回收结果</td><td>retry_next_window</td></tr>
+    </table>
+
+    <h3>8.2 关键业务对象</h3>
+    <table>
+      <tr><th>对象</th><th>核心字段</th><th>业务意义</th></tr>
+      <tr><td>UserProfile</td><td>身份、基础资料、出生信息</td><td>个性化咨询基础</td></tr>
+      <tr><td>ChatThread/Message</td><td>线程ID、消息序列、状态</td><td>会话沉淀与复访</td></tr>
+      <tr><td>BaziProfile</td><td>姓名、出生信息、标签、置顶/归档</td><td>多对象命理资产</td></tr>
+      <tr><td>StarMapReport</td><td>章节状态、进度、失败记录</td><td>深度结果可交付</td></tr>
+      <tr><td>Subscription/Quota</td><td>套餐、周期、已用/可用额度</td><td>边界与升级决策</td></tr>
+      <tr><td>ReferralRecord</td><td>邀请码、绑定关系、奖励状态</td><td>裂变增长可追踪</td></tr>
+    </table>
+
+    <h2 id="s9">9. 非功能、质量与安全</h2>
+    <table>
+      <tr><th>维度</th><th>要求</th><th>落地方式</th></tr>
+      <tr><td>性能</td><td>首问要有快速可感知反馈</td><td>流式渲染、增量展示</td></tr>
+      <tr><td>可靠性</td><td>中断可恢复、失败可重试</td><td>续接机制 + 章节重试</td></tr>
+      <tr><td>一致性</td><td>资料修改后业务侧可感知一致</td><td>状态回显与刷新机制</td></tr>
+      <tr><td>安全</td><td>高风险输入需拦截并替代反馈</td><td>安全策略 + 兜底文案</td></tr>
+      <tr><td>可观测</td><td>关键路径全埋点</td><td>进入/提交/成功/失败/恢复/放弃</td></tr>
+    </table>
+
+    <h2 id="s10">10. 交付排期（里程碑）</h2>
+    <table>
+      <tr><th>里程碑</th><th>范围</th><th>目标</th><th>上线门禁</th></tr>
+      <tr><td>M1 可用闭环</td><td>认证+首问+会话复访+边界提示</td><td>首问稳定跑通</td><td>失败可恢复、回跳可用</td></tr>
+      <tr><td>M2 可持续使用</td><td>档案+报告+设置一致性</td><td>深度功能可交付</td><td>报告可追踪且可重试</td></tr>
+      <tr><td>M3 可规模增长</td><td>订阅优化+邀请+博客多语言</td><td>转化与新增提升</td><td>增长链路可观测</td></tr>
+    </table>
+
+    <h2 id="s11">11. 风险与待确认</h2>
+    <table>
+      <tr><th>风险/问题</th><th>影响</th><th>决策项</th></tr>
+      <tr><td>首问有回复但无价值感</td><td>激活后快速流失</td><td>首问后推荐下一步策略</td></tr>
+      <tr><td>边界提示过硬导致反感</td><td>转化与口碑下降</td><td>强引导 vs 轻引导策略</td></tr>
+      <tr><td>报告等待焦虑</td><td>深度功能放弃率高</td><td>可接受等待阈值与提示策略</td></tr>
+      <tr><td>邀请码奖励规则理解偏差</td><td>争议上升</td><td>奖励生效条件最终口径</td></tr>
+      <tr><td>多语言内容不足</td><td>海外转化受损</td><td>统一回退策略</td></tr>
+    </table>
+
+    <h2 id="s12">12. 验收标准（UAT）</h2>
+    <ol>
+      <li>新用户能在单路径内完成注册、首问、得到可读反馈。</li>
+      <li>任一中断场景下，用户都可继续而非重来。</li>
+      <li>触达边界时，用户可看懂原因并完成可选决策。</li>
+      <li>报告生成可见进度，失败章节可重试。</li>
+      <li>设置页修改后，在业务页面可感知一致状态。</li>
+      <li>邀请与博客路径均可形成可追踪转化。</li>
+    </ol>
+
+    <div class="card note">
+      <b>交付说明：</b>本文档可直接用于评审会、研发拆解和项目管理工具（Jira/TAPD）录入。建议下一步把“第6节功能表 + 第10节里程碑 + 第12节验收”转为任务模板。
+    </div>
+  </div>
+</body>
+</html>

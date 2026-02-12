@@ -1,0 +1,4103 @@
+﻿{
+  "nodes": [
+    {
+      "nodeId": "userGuide",
+      "name": "系统配置",
+      "intro": "可以配置应用的系统参数",
+      "avatar": "core/workflow/template/systemConfig",
+      "flowNodeType": "userGuide",
+      "position": {
+        "x": -447.0009537165194,
+        "y": -395.59872166321924
+      },
+      "inputs": [
+        {
+          "key": "welcomeText",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "core.app.Welcome Text",
+          "value": ""
+        },
+        {
+          "key": "variables",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "core.app.Chat Variable",
+          "value": []
+        },
+        {
+          "key": "questionGuide",
+          "valueType": "boolean",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "core.app.Question Guide",
+          "value": false
+        },
+        {
+          "key": "tts",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "type": "web"
+          }
+        },
+        {
+          "key": "whisper",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": {
+            "open": false,
+            "autoSend": false,
+            "autoTTSResponse": false
+          }
+        },
+        {
+          "key": "scheduleTrigger",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": null
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "448745",
+      "name": "流程开始",
+      "intro": "",
+      "avatar": "core/workflow/template/workflowStart",
+      "flowNodeType": "workflowStart",
+      "position": {
+        "x": -1895.5564965595886,
+        "y": 591.5305697144782
+      },
+      "inputs": [
+        {
+          "key": "userChatInput",
+          "renderTypeList": [
+            "reference",
+            "textarea"
+          ],
+          "valueType": "string",
+          "label": "workflow:user_question",
+          "required": true,
+          "toolDescription": "User Question",
+          "debugLabel": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "userChatInput",
+          "key": "userChatInput",
+          "label": "common:core.module.input.label.user question",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "loOvhld2ZTKa",
+      "name": "AI 对话",
+      "intro": "AI 大模型对话",
+      "avatar": "core/workflow/template/aiChat",
+      "flowNodeType": "chatNode",
+      "showStatus": true,
+      "position": {
+        "x": 1173.698339420942,
+        "y": 39.342296808154344
+      },
+      "version": "4.9.7",
+      "inputs": [
+        {
+          "key": "model",
+          "renderTypeList": [
+            "settingLLMModel",
+            "reference"
+          ],
+          "label": "common:core.module.input.label.aiModel",
+          "valueType": "string",
+          "value": "qwen-max",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "temperature",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": 0,
+          "valueType": "number",
+          "min": 0,
+          "max": 10,
+          "step": 1,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "maxToken",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": 2000,
+          "valueType": "number",
+          "min": 100,
+          "max": 4000,
+          "step": 50,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "isResponseAnswerText",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": false,
+          "valueType": "boolean",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatQuoteRole",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "value": "system",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quoteTemplate",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quotePrompt",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatVision",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "boolean",
+          "value": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatReasoning",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "boolean",
+          "value": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatTopP",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "number",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatStopSign",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatResponseFormat",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatJsonSchema",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "systemPrompt",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "max": 3000,
+          "valueType": "string",
+          "label": "common:core.ai.Prompt",
+          "description": "common:core.app.tip.systemPromptTip",
+          "placeholder": "common:core.app.tip.chatNodeSystemPromptTip",
+          "value": "# Task\n你的任务是根据用户输入的句子，准确识别用户的主要诉求；\n然后严格按照分类中的问法示例，根据【评价标准】进行主题和意图的判断；\n最终选择与用户输入相关性最强的一条分类，按照【输出格式参考】进行返回。\n\n# 输出参考格式\n【分类n】：……\n主题一致/部分一致/不一致：因为用户涉及主题为……，分类涉及主题为……。\n意图一致/部分一致/不一致：因为用户意图为……，分类意图为……。\n\n# Attention\n1.严格按照【输出格式参考】进行返回，禁止输出其他内容。\n2.若用户输入为陈述句，则在不改变原意的情况下改写为疑问句再进行处理。\n3.用户输入有时会出现拼写错误/多音字导致的错别字，可在不改变用户意图的情况下自行理解后再进行处理。\n    举例：炸机——炸鸡、飞行器——飞行器、御——卸。\n4. 若用户输入为繁体中文、港澳粤语、台湾用语等，先将问句转述为普通话后进行处理。\n 举例：\n  用户输入：唔該我想問下維修費用幾多錢\n  转述为普通话：请问维修费用是多少\n  分析：”幾多”和“唔該”是粤语惯用用语，因此问句的意思是请问维修费用是多少。\n\n# 评价标准\n【主题评价标准】：\n\t主题一致：用户输入与分类涉及的主题完全相同。\n\t主题部分一致：用户输入与分类涉及的主题有部分重叠，但关注的具体内容或问题有所不同。\n\t主题不一致：用户输入与分类涉及的主题完全不同，涉及不同的产品、服务或问题类型。\n\n【意图评价标准】：\n\t意图一致：用户的意图相似，例如都在寻求解决方案、获取信息或了解条件。\n\t意图部分一致：用户的意图有一定的相似性，但并不完全相同，例如一个问题是询问原因，另一个是询问解决方案。\n\t\t示例：御3设置电池自放电——【分类1】：咨询电池信息及充电方式\n\t意图不一致：用户的意图完全不同，例如一个问题是在询问价格，另一个是在询问使用方法。\n\n# 产品型号参考\nOsmo Pocket 3 也称为：Op3、osmo pocket 3、OP 3、op3、pocket3、osmopocket3、口袋灵眸3、灵眸口袋3、口袋3、pocket 3、OP3、pockrt3灵眸。\n\n# 分类列表\n分类 1：首轮菜单\n    选择条件：当用户咨询 Osmo Pocket 3 相关话题，且其他分类不符合时。\n    问法示例：pocket3 多少钱、 pocket3 续航多久、 pocket3 能拍 4k 吗、 pocket3 和action4 哪个好、 pocket3 有美颜吗。\n\n分类 2：Osmo Pocket 3 发货时间\n    选择条件：当用户询问 Osmo Pocket 3 的发货时间时。\n    问法示例：pocket3 什么时候发货、下单后几天能到、现在买 pocket3 多久发货、 pocket3 发货要等多久、今天下单 pocket3 什么时候发。\n\n分类 3：Osmo Pocket 3 补货时间\n    选择条件：当用户询问 Osmo Pocket 3 的补货时间时。\n    问法示例：pocket3 什么时候补货、 pocket3 缺货多久能补、 pocket3 还会补货吗、 pocket3 补货通知怎么设置、 pocket3 下一批什么时候到。\n\n分类 4：Osmo Pocket 3 被限购/被退款/被取消/被砍单\n    选择条件：当用户咨询op3被限购/被退款/被取消/被砍单的相关情况时。\n    问法示例：咨询 pocket 3 订单问题、为森么我的订单被取消了、我的订单为森么被退款了、我的op3为森么被取消了请问呢、pocket3 限购几台、一个人能买几台 pocket3 、pocket3 购买数量限制、为什么 pocket3 只能买一台、 pocket3 限购政策是什么\n\n分类 5：更多 Pocket 3 相关问题\n    选择条件：当用户咨询其他与 Pocket 3 相关的问题时。\n    问法示例：pocket3 防水吗、 pocket3 电池能用多久、 pocket3 怎么连接手机、 pocket3 有没有翻转屏、 pocket3 支持外接麦克风吗。\n\n分类 6：Pocket 3 为什么那么难抢？\n    选择条件：当用户询问 Pocket 3 难以购买的原因时。\n    问法示例：pocket3 怎么老是没货、 pocket3 为什么抢不到、 pocket3 缺货原因、 pocket3 什么时候能随便买、 pocket3 产量不足吗。\n\n分类 7：购买全能版后可以退配件吗？\n    选择条件：当用户询问购买全能版后是否可以退配件时。\n    问法示例：全能版的配件能单独退吗、买了全能版不想要配件怎么办、全能版配件退货政策、全能版配件可以不要吗、全能版退配件要扣钱吗。\n\n分类 8：抢购买了 Care 随心换能退吗？\n    选择条件：当用户询问是否可以退掉 Care 随心换服务时。\n    问法示例：care 服务能退吗、不想要随心换怎么退、刚买的 care 能取消吗、 care 退款流程、 pocket3 的保险怎么退。\n\n分类9：线下门店购买op3\n    选择条件：当用户咨询线下门店购买op3相关信息时。\n    问法示例：OP3线下门店有卖吗、我能不能去店里买pocket3、pocket3店里有现货吗、实体店有没有OP3卖。\n\n分类10：购买 Vlog 套装可以退麦克风吗？\n    选择条件：当用户询问Vlog套装是否可以退麦克风时。    问法示例：vlog套装不要麦克风行不，我已经有麦克风了、vlog套装的麦克风能退吗、退麦克风影响其他配件吗、怎么单独退麦克风、麦克风退货政策、退麦克风要多久。\n    \n# Example\n- 例1：\n输入：\n 我的订单最快什么时候发货\n输出：\n 【分类38】：订单异常\n  主题部分一致。用户涉及主题为订单相关问题，分类涉及主题为订单相关问题，因此主题一致。\n  意图不一致：不一致。用户询问的是订单的发货情况，分类涉及的是订单异常相关问题，因此意图不一致。\n\n- 例2：\n输入：\n 你好 为什么无法申请退货呢？\n输出：\n 【分类38】：订单异常\n  主题不一致：用户涉及主题为退货相关问题，分类涉及主题为订单异常相关问题，因此主题不一致。\n  意图不一致：用户询问的是退货申请的问题，分类涉及订单异常，因此意图不一致。\n\n- 例3：\n输入：\n 大疆fpv起飞不了，失控，但是眼睛不显示哪里有问题\n输出：\n 【分类26】：产品无法开机排查\n  主题不一致：用户询问的是FPV起飞的问题，分类涉及产品无法开机的排查，因此主题不一致。\n  意图不一致：用户的意图是在寻求解决FPV无法起飞的问题，用户提到的失控和眼睛不显示的问题与无法起飞不相关，因此意图不一致。\n \n-  例4：\n输入：\n Air2无人机还不兼容华为Pura70Ultra手机吗\n输出：\n 【分类35】：App 相关\n 主题部分一致：用户涉及主题为产品与手机的兼容性，分类涉及主题为App兼容性及下载方式，主题部分一致。\n 意图一致：用户在询问Air2无人机与华为Pura70Ultra手机的兼容性，分类也涉及兼容性问题，因此意图一致。",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "history",
+          "renderTypeList": [
+            "numberInput",
+            "reference"
+          ],
+          "valueType": "chatHistory",
+          "label": "common:core.module.input.label.chat history",
+          "description": "workflow:max_dialog_rounds",
+          "required": true,
+          "min": 0,
+          "max": 50,
+          "value": 1,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quoteQA",
+          "renderTypeList": [
+            "settingDatasetQuotePrompt"
+          ],
+          "label": "",
+          "debugLabel": "Dataset Reference",
+          "description": "",
+          "valueType": "datasetQuote",
+          "toolDescription": ""
+        },
+        {
+          "key": "fileUrlList",
+          "renderTypeList": [
+            "reference",
+            "input"
+          ],
+          "label": "app:workflow.user_file_input",
+          "debugLabel": "File Link",
+          "description": "app:workflow.user_file_input_desc",
+          "valueType": "arrayString",
+          "toolDescription": ""
+        },
+        {
+          "key": "userChatInput",
+          "renderTypeList": [
+            "reference",
+            "textarea"
+          ],
+          "valueType": "string",
+          "label": "workflow:user_question",
+          "required": true,
+          "toolDescription": "User Question",
+          "value": [
+            "448745",
+            "userChatInput"
+          ],
+          "debugLabel": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "history",
+          "key": "history",
+          "label": "common:core.module.output.label.New context",
+          "description": "Splice the current reply content with the history records and return it as the new context",
+          "valueType": "chatHistory",
+          "type": "static",
+          "required": true,
+          "valueDesc": "{\n  obj: System | Human | AI;\n  value: string;\n}[]"
+        },
+        {
+          "id": "answerText",
+          "key": "answerText",
+          "label": "common:core.module.output.label.Ai response content",
+          "description": "Will be triggered after the stream reply is completed",
+          "valueType": "string",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "reasoningText",
+          "key": "reasoningText",
+          "required": false,
+          "label": "workflow:reasoning_text",
+          "valueType": "string",
+          "type": "static",
+          "invalid": true,
+          "description": ""
+        },
+        {
+          "id": "system_error_text",
+          "key": "system_error_text",
+          "type": "error",
+          "valueType": "string",
+          "label": "workflow:error_text",
+          "description": ""
+        }
+      ],
+      "catchError": false
+    },
+    {
+      "nodeId": "pZAaseRWCJKQ",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 1846.6335101370962,
+        "y": 76.55088698446906
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "主题一致"
+                },
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "意图一致"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "主题一致"
+                },
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "意图部分一致"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "qA2nhr7hb0dE",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3638.8672210071327,
+        "y": -241.85121245833676
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您对 Osmo Pocket 3 的关注与支持，请选择您想了解相关的问题：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"Osmo Pocket 3 发货时间\", \"title\": \"Osmo Pocket 3 发货时间\"}, {\"displayContent\":\"Osmo Pocket 3 补货时间\", \"title\": \"Osmo Pocket 3 补货时间\"}, {\"displayContent\":\"更多 Pocket 3 相关问题\", \"title\": \"更多 Pocket 3 相关问题\"} ]}' ></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "nfpbGetkLG8w",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 2921.230393835276,
+        "y": -204.84224206979644
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类1】",
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类2】",
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类3】",
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类4】",
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类5】",
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类6】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类7】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类8】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类9】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "loOvhld2ZTKa",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类10】"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "hOzbKWW4DalF",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3674.986255694222,
+        "y": 385.56116065350625
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>请点击您想了解的问题 👇🏻：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"Osmo Pocket 3 使用教程\", \"title\": \"Osmo Pocket 3 使用教程\"},{\"displayContent\":\"购买全能版后可以退配件吗？\", \"title\": \"购买全能版后可以退配件吗？\"},{\"displayContent\":\"购买 Vlog 套装可以退麦克风吗？\", \"title\": \"购买 Vlog 套装可以退麦克风吗？\"}]}' ></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "jVhlBvkkYf0W",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4358.594978255985,
+        "y": 229.46928473145078
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>为了让更多用户能购买并体验 Osmo Pocket 3 相机，<strong>同一用户限购会 3 件标准套装（含 \"Osmo Pocket 3\" 和 &ldquo;Vlog套装&rdquo; ）</strong>，超量订单将会被取消。</p>\n<p>系统会通过订单的下单信息和收货信息等综合判断，如<strong>出现重复下单触发限购规则的情况，订单会被取消</strong>。如果订单因限购原因被取消，则无法恢复，麻烦您后续关注 Pocket 3 各套装的补货信息，感谢您的关注与支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "eEuRzaI3dVxe",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3654.5260929679075,
+        "y": 103.39207474761545
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您对 Osmo Pocket 3 的关注，您可点击按钮直达商城购买页：</p>\n<p><a style=\"display: inline-block; color: #2c7cf6; border-radius: 20px; border: 1px solid #2C7CF6; padding: 4px 12px; margin: 3px 4px; cursor: pointer; text-decoration: none;\" href=\"https://store.dji.com/cn/product/osmo-pocket-3?vid=153291\" target=\"_blank\" referrerpolicy=\"no-referrer\">立即购买</a></p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "n5wvMmSwD6X5",
+      "name": "普通FAQ",
+      "intro": "可以发出一个 HTTP 请求，实现更为复杂的操作（联网搜索、数据库查询等）",
+      "avatar": "core/workflow/template/httpRequest",
+      "flowNodeType": "httpRequest468",
+      "showStatus": true,
+      "position": {
+        "x": 2824.0284495053893,
+        "y": 1382.9460484783788
+      },
+      "inputs": [
+        {
+          "key": "system_addInputParam",
+          "renderTypeList": [
+            "addInputParam"
+          ],
+          "valueType": "dynamic",
+          "label": "",
+          "required": false,
+          "description": "common:core.module.input.description.HTTP Dynamic Input",
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          },
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpMethod",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "string",
+          "label": "",
+          "value": "POST",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpTimeout",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "number",
+          "label": "",
+          "value": 30,
+          "min": 5,
+          "max": 600,
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpReqUrl",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Url",
+          "placeholder": "https://api.ai.com/getInventory",
+          "required": false,
+          "value": "https://ai.djicorp.com/ai/fastgpt-api/api/v1/chat/completions",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_header_secret",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "object",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpHeader",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "any",
+          "value": [
+            {
+              "key": "Content-Type",
+              "type": "string",
+              "value": "application/json"
+            },
+            {
+              "key": "Authorization",
+              "type": "string",
+              "value": "Bearer fastgpt-P1yXlmXo7eP6PEHFlYQAda1qAao0NypYGYhNZiTDI30cN3cMeaJCtNsHVBwjRHIm"
+            }
+          ],
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Header",
+          "placeholder": "common:core.module.input.description.Http Request Header",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpParams",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpJsonBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": "{\r\n    \"AppId\": \"6752c93898a04fcbf5373b1f\",\r\n    \"detail\": \"false\",\r\n    \"messages\": [{\"role\": \"user\", \"content\": \"{{query}}\"}]\r\n}",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpFormBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpContentType",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "value": "json",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "query",
+          "valueType": "string",
+          "label": "query",
+          "renderTypeList": [
+            "reference"
+          ],
+          "description": "",
+          "canEdit": true,
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "value": [
+            "448745",
+            "userChatInput"
+          ],
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "httpRawResponse",
+          "key": "httpRawResponse",
+          "label": "workflow:raw_response",
+          "description": "Raw HTTP response. Only accepts string or JSON type response data.",
+          "valueType": "any",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "error",
+          "key": "error",
+          "label": "workflow:error_text",
+          "valueType": "string",
+          "type": "error",
+          "description": ""
+        },
+        {
+          "id": "system_addOutputParam",
+          "key": "system_addOutputParam",
+          "type": "dynamic",
+          "valueType": "dynamic",
+          "label": "",
+          "editField": {
+            "key": true,
+            "valueType": true
+          }
+        },
+        {
+          "id": "fO14oW8RfV6k",
+          "type": "dynamic",
+          "key": "choices[0].message.content",
+          "valueType": "string",
+          "label": "choices[0].message.content"
+        }
+      ],
+      "catchError": true
+    },
+    {
+      "nodeId": "iRsIklsEpUN5",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3621.72699747953,
+        "y": 1705.7439135757538
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "selectedTypeIndex": 1,
+          "value": [
+            "n5wvMmSwD6X5",
+            "fO14oW8RfV6k"
+          ],
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "hVgOIfLvNSjD",
+      "name": "常规场景",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 153.56556837087322,
+        "y": 55.32812998526492
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "OR",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "随心换"
+                },
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "are"
+                },
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "ARE"
+                },
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "续保"
+                },
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "保险"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "更多 Pocket 3 相关问题"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "Pocket 3 为什么那么难抢？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "购买全能版后可以退配件吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "抢购买了 Care 随心换能退吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "Osmo Pocket 3 抢购咨询"
+                }
+              ]
+            },
+            {
+              "condition": "OR",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "咨询 pocket 3 订单问题"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "Osmo Pocket 3 无法付款"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "equalTo",
+                  "value": "购买 Vlog 套装可以退麦克风吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "360"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "zP645HE8XnZZ",
+      "name": "随心换-多轮",
+      "intro": "可以发出一个 HTTP 请求，实现更为复杂的操作（联网搜索、数据库查询等）",
+      "avatar": "core/workflow/template/httpRequest",
+      "flowNodeType": "httpRequest468",
+      "showStatus": true,
+      "position": {
+        "x": 1094.1571845977508,
+        "y": -910.7492991755663
+      },
+      "inputs": [
+        {
+          "key": "system_addInputParam",
+          "renderTypeList": [
+            "addInputParam"
+          ],
+          "valueType": "dynamic",
+          "label": "",
+          "required": false,
+          "description": "common:core.module.input.description.HTTP Dynamic Input",
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          },
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpMethod",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "string",
+          "label": "",
+          "value": "POST",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpTimeout",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "number",
+          "label": "",
+          "value": 30,
+          "min": 5,
+          "max": 600,
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpReqUrl",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Url",
+          "placeholder": "https://api.ai.com/getInventory",
+          "required": false,
+          "value": "https://ai.djicorp.com/ai/fastgpt-api/api/v1/chat/completions",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_header_secret",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "object",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpHeader",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "any",
+          "value": [
+            {
+              "key": "Content-Type",
+              "type": "string",
+              "value": "application/json"
+            },
+            {
+              "key": "Authorization",
+              "type": "string",
+              "value": "Bearer fastgpt-9vZdLnqwe29HBbW9sOv7u29gzlv2a3R3YHOgi8sGEi2cULz1eWz42sdzmrYxjN"
+            }
+          ],
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Header",
+          "placeholder": "common:core.module.input.description.Http Request Header",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpParams",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpJsonBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": "{\r\n    \"AppId\": \"6752c93898a04fcbf5373b1f\",\r\n    \"detail\": \"false\",\r\n    \"messages\": [{\"role\": \"user\", \"content\": \"{{query}}\"}]\r\n}",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpFormBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpContentType",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "value": "json",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "query",
+          "valueType": "string",
+          "label": "query",
+          "renderTypeList": [
+            "reference"
+          ],
+          "description": "",
+          "canEdit": true,
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "value": [
+            "448745",
+            "userChatInput"
+          ],
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "httpRawResponse",
+          "key": "httpRawResponse",
+          "label": "workflow:raw_response",
+          "description": "Raw HTTP response. Only accepts string or JSON type response data.",
+          "valueType": "any",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "error",
+          "key": "error",
+          "label": "workflow:error_text",
+          "valueType": "string",
+          "type": "error",
+          "description": ""
+        },
+        {
+          "id": "system_addOutputParam",
+          "key": "system_addOutputParam",
+          "type": "dynamic",
+          "valueType": "dynamic",
+          "label": "",
+          "editField": {
+            "key": true,
+            "valueType": true
+          }
+        },
+        {
+          "id": "fO14oW8RfV6k",
+          "type": "dynamic",
+          "key": "choices[0].message.content",
+          "valueType": "string",
+          "label": "choices[0].message.content"
+        }
+      ],
+      "catchError": true
+    },
+    {
+      "nodeId": "xWT0jcXVLv8t",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 1896.4529542626321,
+        "y": -669.3122125648702
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "selectedTypeIndex": 1,
+          "value": [
+            "zP645HE8XnZZ",
+            "fO14oW8RfV6k"
+          ],
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "uiG4j17QDrd8",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": -1336.356454932499,
+        "y": 722.2757425511505
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "FASTGPT-OP3"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "oaKVvyF4x2D3",
+      "name": "AI 对话",
+      "intro": "AI 大模型对话",
+      "avatar": "core/workflow/template/aiChat",
+      "flowNodeType": "chatNode",
+      "showStatus": true,
+      "position": {
+        "x": 891.8242423739259,
+        "y": 2274.5886094789894
+      },
+      "version": "4.9.7",
+      "inputs": [
+        {
+          "key": "model",
+          "renderTypeList": [
+            "settingLLMModel",
+            "reference"
+          ],
+          "label": "common:core.module.input.label.aiModel",
+          "valueType": "string",
+          "value": "qwen-max",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "temperature",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": 0,
+          "valueType": "number",
+          "min": 0,
+          "max": 10,
+          "step": 1,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "maxToken",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": 2000,
+          "valueType": "number",
+          "min": 100,
+          "max": 4000,
+          "step": 50,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "isResponseAnswerText",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "value": false,
+          "valueType": "boolean",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatQuoteRole",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "value": "system",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quoteTemplate",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quotePrompt",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatVision",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "boolean",
+          "value": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatReasoning",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "boolean",
+          "value": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatTopP",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "number",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatStopSign",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatResponseFormat",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "aiChatJsonSchema",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "label": "",
+          "valueType": "string",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "systemPrompt",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "max": 3000,
+          "valueType": "string",
+          "label": "common:core.ai.Prompt",
+          "description": "common:core.app.tip.systemPromptTip",
+          "placeholder": "common:core.app.tip.chatNodeSystemPromptTip",
+          "value": "# Task\n你的任务是根据用户输入的句子，准确识别用户的主要诉求；\n然后严格按照分类中的问法示例，根据【评价标准】进行主题和意图的判断；\n最终选择与用户输入相关性最强的一条分类，按照【输出格式参考】进行返回。\n\n# 输出参考格式\n【分类n】：……\n主题一致/部分一致/不一致：因为用户涉及主题为……，分类涉及主题为……。\n意图一致/部分一致/不一致：因为用户意图为……，分类意图为……。\n\n# Attention\n1.严格按照【输出格式参考】进行返回，禁止输出其他内容。\n2.若用户输入为陈述句，则在不改变原意的情况下改写为疑问句再进行处理。\n3.用户输入有时会出现拼写错误/多音字导致的错别字，可在不改变用户意图的情况下自行理解后再进行处理。\n    举例：炸机——炸鸡、飞行器——飞行器、御——卸。\n4. 若用户输入为繁体中文、港澳粤语、台湾用语等，先将问句转述为普通话后进行处理。\n 举例：\n  用户输入：唔該我想問下維修費用幾多錢\n  转述为普通话：请问维修费用是多少\n  分析：”幾多”和“唔該”是粤语惯用用语，因此问句的意思是请问维修费用是多少。\n\n# 评价标准\n【主题评价标准】：\n\t主题一致：用户输入与分类涉及的主题完全相同。\n\t主题部分一致：用户输入与分类涉及的主题有部分重叠，但关注的具体内容或问题有所不同。\n\t主题不一致：用户输入与分类涉及的主题完全不同，涉及不同的产品、服务或问题类型。\n\n【意图评价标准】：\n\t意图一致：用户的意图相似，例如都在寻求解决方案、获取信息或了解条件。\n\t意图部分一致：用户的意图有一定的相似性，但并不完全相同，例如一个问题是询问原因，另一个是询问解决方案。\n\t\t示例：御3设置电池自放电——【分类1】：咨询电池信息及充电方式\n\t意图不一致：用户的意图完全不同，例如一个问题是在询问价格，另一个是在询问使用方法。\n\n# 产品型号参考\n    Osmo Pocket 3 也称为：Op3、osmo pocket 3、OP 3、op3、pocket3、osmopocket3、口袋灵眸3、灵眸口袋3、口袋3、pocket 3、OP3、pockrt3灵眸。\n\n# 分类列表\n分类1：抢购期间系统异常？\n    选择条件：当用户咨询抢购期间系统出现异常时。\n    问法示例：抢购页面打不开、一直显示加载中、提交订单没反应、系统卡死了、为什么一直提示错误。\n\n分类2：Pocket 3 什么时候开抢？\n    选择条件：当用户询问Pocket 3的开抢时间时。\n    问法示例：pocket3几点开抢、抢购时间是哪天、什么时候能买pocket3、开抢日期定了吗、具体抢购时间。\n\n分类3：Pocket 3 退货咨询\n    选择条件：当用户咨询Pocket 3的退货政策或流程时。\n    问法示例：pocket3怎么退货、退货要多久、退货要自己出运费吗、拆封了还能退吗、退货地址在哪。\n\n分类4：更多 Pocket 3 问题\n    选择条件：当用户咨询其他与Pocket 3相关的问题时。\n    问法示例：pocket3内存卡、pocket3续航多久、op支持4k吗、有没有美颜功能、防水吗、重量多少。\n\n分类5：Pocket 3 为什么那么难抢？\n    选择条件：当用户询问Pocket 3难以抢购的原因时。\n    问法示例：为什么秒没、根本抢不到、库存有多少、是不是被黄牛抢了、能不能多备点货。\n\n分类6：页面提示\"当前商品抢购人数过多，请稍后再试\"\n    选择条件：当用户遇到页面提示抢购人数过多的问题时。\n    问法示例：一直提示人多、进不去页面、刷新也没用、什么时候能好、服务器崩了吗。\n\n分类7：页面提示\"请返回商品详情页购买\"\n    选择条件：当用户遇到页面提示返回商品详情页购买的问题时。\n    问法示例：为什么让我返回、点不了购买、详情页在哪、怎么操作、一直循环这个提示。\n\n分类8：为什么无法进入支付页面\n    选择条件：当用户无法进入支付页面时。\n    问法示例：支付页面加载不出来、点支付没反应、卡在订单确认、支付失败、一直转圈。\n\n分类9：其他异常问题\n    选择条件：当用户遇到其他未分类的异常问题时。\n    问法示例：账号被登出了、优惠券用不了、地址选不了、显示已抢完但还有库存、订单消失了。\n\n分类10：Pocket 3 下次补货是什么时候？\n    选择条件：当用户询问Pocket 3的下次补货时间时。\n    问法示例：标准版补货时间、什么时候补货、会补货吗、具体补货时间、等多久能补、官方会通知吗。\n\n分类11：Pocket 3 标准版还补货吗？\n    选择条件：当用户询问Pocket 3标准版是否还会补货时。\n    问法示例：标准版还会上吗、是不是停产了、什么时候补标准版、能预定吗、为什么只有全能版。\n\n分类12：Pocket 3 限购政策\n    选择条件：当用户询问Pocket 3的限购政策时。\n    问法示例：一个用户能买几台 Pocket 3、去年买过一个op3单机版，现在还可以买么、限购几台、能用多个账号买吗、同一个地址能发两台吗、怎么查限购数量、超限会砍单吗。\n\n分类13：11点准时补货吗？\n    选择条件：当用户询问是否会在11点准时补货时。\n    问法示例：11点整补吗、会延迟吗、准不准时、几点刷新页面、需要提前等着吗。\n\n分类14：购买全能版后可以退配件吗？\n    选择条件：当用户询问购买全能版后是否可以退配件时。\n    问法示例：全能版的配件能单独退吗、退配件怎么操作、退配件扣钱吗、必须全套退吗、麦克风能退吗、全能版能不能退mic\n\n分类15：Vlog 套装可以退麦克风吗\n    选择条件：当用户询问Vlog套装是否可以退麦克风时。\n    问法示例：vlog套装不要麦克风行不，我已经有麦克风了、vlog套装的麦克风能退吗、退麦克风影响其他配件吗、怎么单独退麦克风、麦克风退货政策、退麦克风要多久。\n\n分类16：Care 随心换能退吗\n    选择条件：当用户询问Care随心换服务是否可以退时。\n    问法示例：care能退吗、退care怎么操作、退care扣钱吗、退care有时间限制吗、退了care影响保修吗。\n\n分类17：Pocket 3 发货时间\n    选择条件：当用户询问Pocket 3的发货时间时。\n    问法示例：多久发货、发货了吗、什么时候能收到、能加急吗、周末发不发货。\n\n分类18：可以更换不同套装吗\n    选择条件：当用户询问是否可以更换不同套装时。\n    问法示例：能换套装吗、换套装要补差价吗、怎么操作换套装、换套装影响发货时间吗、换套装有限制吗。\n\n分类19：你们是不是饥饿营销+你们和黄牛有合作吗\n    选择条件：当用户质疑是否存在饥饿营销或与黄牛合作时。\n    问法示例：是不是故意搞饥饿营销、为什么黄牛那么多、官方和黄牛一伙的吧、能不能管管黄牛、这样耍猴有意思吗。\n\n分类20：补货数量是多少\n    选择条件：当用户询问补货数量时。\n    问法示例：你们补多少货呀、这次你们放多少量。\n\n分类21：为什么无法提交订单\n    选择条件：当用户询问为什么无法提交订单时。\n    问法示例：\n\n\n# Example\n- 例1：\n输入：\n 我的订单最快什么时候发货\n输出：\n 【分类38】：订单异常\n  主题部分一致。用户涉及主题为订单相关问题，分类涉及主题为订单相关问题，因此主题一致。\n  意图不一致：不一致。用户询问的是订单的发货情况，分类涉及的是订单异常相关问题，因此意图不一致。\n\n- 例2：\n输入：\n 你好 为什么无法申请退货呢？\n输出：\n 【分类38】：订单异常\n  主题不一致：用户涉及主题为退货相关问题，分类涉及主题为订单异常相关问题，因此主题不一致。\n  意图不一致：用户询问的是退货申请的问题，分类涉及订单异常，因此意图不一致。\n\n- 例3：\n输入：\n 大疆fpv起飞不了，失控，但是眼睛不显示哪里有问题\n输出：\n 【分类26】：产品无法开机排查\n  主题不一致：用户询问的是FPV起飞的问题，分类涉及产品无法开机的排查，因此主题不一致。\n  意图不一致：用户的意图是在寻求解决FPV无法起飞的问题，用户提到的失控和眼睛不显示的问题与无法起飞不相关，因此意图不一致。\n \n-  例4：\n输入：\n Air2无人机还不兼容华为Pura70Ultra手机吗\n输出：\n 【分类35】：App 相关\n 主题部分一致：用户涉及主题为产品与手机的兼容性，分类涉及主题为App兼容性及下载方式，主题部分一致。\n 意图一致：用户在询问Air2无人机与华为Pura70Ultra手机的兼容性，分类也涉及兼容性问题，因此意图一致。",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "history",
+          "renderTypeList": [
+            "numberInput",
+            "reference"
+          ],
+          "valueType": "chatHistory",
+          "label": "common:core.module.input.label.chat history",
+          "description": "workflow:max_dialog_rounds",
+          "required": true,
+          "min": 0,
+          "max": 50,
+          "value": 1,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "quoteQA",
+          "renderTypeList": [
+            "settingDatasetQuotePrompt"
+          ],
+          "label": "",
+          "debugLabel": "Dataset Reference",
+          "description": "",
+          "valueType": "datasetQuote",
+          "toolDescription": ""
+        },
+        {
+          "key": "fileUrlList",
+          "renderTypeList": [
+            "reference",
+            "input"
+          ],
+          "label": "app:workflow.user_file_input",
+          "debugLabel": "File Link",
+          "description": "app:workflow.user_file_input_desc",
+          "valueType": "arrayString",
+          "toolDescription": ""
+        },
+        {
+          "key": "userChatInput",
+          "renderTypeList": [
+            "reference",
+            "textarea"
+          ],
+          "valueType": "string",
+          "label": "workflow:user_question",
+          "required": true,
+          "toolDescription": "User Question",
+          "value": [
+            "448745",
+            "userChatInput"
+          ],
+          "debugLabel": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "history",
+          "key": "history",
+          "label": "common:core.module.output.label.New context",
+          "description": "Splice the current reply content with the history records and return it as the new context",
+          "valueType": "chatHistory",
+          "type": "static",
+          "required": true,
+          "valueDesc": "{\n  obj: System | Human | AI;\n  value: string;\n}[]"
+        },
+        {
+          "id": "answerText",
+          "key": "answerText",
+          "label": "common:core.module.output.label.Ai response content",
+          "description": "Will be triggered after the stream reply is completed",
+          "valueType": "string",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "reasoningText",
+          "key": "reasoningText",
+          "required": false,
+          "label": "workflow:reasoning_text",
+          "valueType": "string",
+          "type": "static",
+          "invalid": true,
+          "description": ""
+        },
+        {
+          "id": "system_error_text",
+          "key": "system_error_text",
+          "type": "error",
+          "valueType": "string",
+          "label": "workflow:error_text",
+          "description": ""
+        }
+      ],
+      "catchError": false
+    },
+    {
+      "nodeId": "dBQUSo3d0HOM",
+      "name": "判断器",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": 2023.267916279115,
+        "y": 2344.591964202277
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类1】",
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类2】",
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类3】",
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类4】",
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "【分类5】",
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类6】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类7】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类8】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类9】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类10】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类11】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类12】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类13】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类14】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类15】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类16】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类17】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类18】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类19】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类20】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类21】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类22】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类23】"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "oaKVvyF4x2D3",
+                    "answerText"
+                  ],
+                  "condition": "include",
+                  "value": "【分类24】"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "pjL8NO8z24yj",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3901.0344799267896,
+        "y": 2050.804763750694
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>您可能想了解以下问题 👇🏻：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"Pocket 3 为什么那么难抢？\",\"title\":\"Pocket 3 为什么那么难抢？\"},{\"displayContent\":\"页面提示“当前商品抢购人数过多，请稍后再试”\",\"title\":\"页面提示“当前商品抢购人数过多，请稍后再试”\"},{\"displayContent\":\"页面提示“请返回商品详情页购买”\",\"title\":\"页面提示“请返回商品详情页购买”\"},{\"displayContent\":\"为什么无法进入支付页面\",\"title\":\"为什么无法进入支付页面\"},{\"displayContent\":\"为什么无法提交订单\",\"title\":\"为什么无法提交订单\"},{\"displayContent\":\"其他异常问题\",\"title\":\"其他异常问题\"}]}'></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "aeHnbCrjL3UQ",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4543.806317769992,
+        "y": 2207.2757762279357
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>您可能想了解以下问题 👇🏻：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"Pocket 3 下次补货是什么时候？\",\"title\":\"Pocket 3 下次补货是什么时候？\"},{\"displayContent\":\"Pocket 3 标准版还补货吗？\",\"title\":\"Pocket 3 标准版还补货吗？\"},{\"displayContent\":\"一个用户能买几台 Pocket 3 ？\",\"title\":\"一个用户能买几台 Pocket 3 ？\"},{\"displayContent\":\"11 点准时补货吗？\",\"title\":\"11 点准时补货吗？\"}]}'></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "uZL9PLp00dTq",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3939.5509690126764,
+        "y": 3622.7266770714496
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>❤️ 感谢您对 Osmo Pocket 3 的关注与支持！</p>\n<p>Osmo Pocket 3 目前有多个套餐供您的选择，标准套装市场需求量较大，销售较为火爆，我们也在努力提升产能，尽快上架您的心仪产品。您可以关注后续的补货情况哦。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "zUmSU0vfqi3Z",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4689.51236195137,
+        "y": 3437.674541521988
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>【🛒&nbsp;<a target=\"_blank\" href=\"https://store.dji.com/cn/product/osmo-pocket-3?from=site-nav\" style=\"background-color: rgb(255, 255, 255);\">Osmo Pocket 3</a>】</p><p>补货日期：6 月 6 日（周五）</p><p>补货时间：11:00</p><p><b>温馨提示：</b><br/>1. 由于商品销售火爆，补货时间可能会基于实际情况调整；<br/></p><p>2. 如果页面显示缺货售罄，说明已经售罄，请关注后续抢购信息。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "v4oZ4bh6LNYm",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3922.5754664388396,
+        "y": 3288.372003566591
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 感谢您对 Osmo Pocket 3 的喜爱，目前 Osmo Pocket 3 销售比较火爆，抢购人数较多，建议您在抢购时持续刷新页面，快速点击&ldquo;立即购买&rdquo;。感谢您的选择和支持，希望您尽早体验到心仪产品。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "alnqWnJVO7Ko",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4562.257729679724,
+        "y": 3120.803555326889
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 收到您反馈支付的问题了，Osmo Pocket 3 销售非常火爆，同时支付的客户较多，建议多次尝试。如果超过支付时间将会无法支付成功。请您关注后续产品的上架情况。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "swCKQBb19y74",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4592.152897616788,
+        "y": 2799.102556337506
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 感谢您对 Osmo Pocket 3 的喜爱，目前这款产品销售比较火爆，抢购人数较多，页面可能会出现拥堵，建议您持续刷新页面，快速【点击购买】。感谢您的选择和支持，希望您尽早体验到心仪产品。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "q9c0zlGnbuGN",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3912.7101603632345,
+        "y": 2694.034697800765
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 感谢您对我们的支持，目前 Osmo Pocket 3 深受大家欢迎，销售火爆抢购人数较多。我们已在加紧生产，以便及时补充库存。 烦请您持续关注，我们也希望您能尽早体验到心仪的产品。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "xQCGKYEYdrbf",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4551.521406219948,
+        "y": 2500.7808755247847
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>您可能想了解以下问题 👇🏻：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"Pocket 3 发货时间\",\"title\":\"Pocket 3 发货时间\"},{\"displayContent\":\"Pocket 3 使用教程\",\"title\":\"Pocket 3 使用教程\"},{\"displayContent\":\"Pocket 3 内存多大\",\"title\":\"Osmo Pocket 内存及兼容存储卡\"},{\"displayContent\":\"可以更换不同套装吗\",\"title\":\"可以更换不同套装吗\"}]}'></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "cccNOwHh9WB0",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3923.4464838230106,
+        "y": 2382.681317467241
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>您可能想了解以下问题 👇🏻：</p><card-button-msg data='{\"list\":[{\"displayContent\":\"购买全能版后可以退配件吗？\",\"title\":\"购买全能版后可以退配件吗？\"},{\"displayContent\":\"Vlog 套装可以退无线麦克风吗\",\"title\":\"Vlog 套装可以退无线麦克风吗\"},{\"displayContent\":\"Care 随心换能退吗\",\"title\":\"Care 随心换能退吗\"}]}'></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "xPC87UNBMFMm",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4581.491749913876,
+        "y": 3745.7635738157283
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>为了让更多用户能购买并体验 Osmo Pocket 3 相机，<strong>同一用户限购 3 件标准套装（含 \"Osmo Pocket 3\" 和 &ldquo;Vlog套装&rdquo; ）</strong>，超量订单将会被取消。</p>\n<p>系统会通过订单的下单信息和收货信息等综合判断，如<strong>出现重复下单触发限购规则的情况，订单会被取消</strong>。如果订单因限购原因被取消，则无法恢复，麻烦您后续关注 Pocket 3 各套装的补货信息，感谢您的关注与支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "a56icauK5Led",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3928.652079894883,
+        "y": 3930.210274546771
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo Pocket 3 补货时间为 11：00，但由于商品销售火爆，库存紧缺，补货时间可能会基于实际到货时间调整，但请您放心，仓库到货就会提前上架预约界面，辛苦您多多留意产品页面显示。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "ccbFuFygVIbm",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4571.197607036101,
+        "y": 4057.9627814295145
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 Osmo Pocket 3 全能套装（&yen;4499）属于<strong>一体包装</strong>，相比较于标准版额外包含了 DJI Mic 2 发射器（透明黑）、续航手柄、迷你三脚架和全新收纳包等实用配件，可以帮助到您在创作中一步到位，并且机器 SN 号是一一对应的，故<strong>不支持单独退掉配件</strong>，抢购不易，建议留用哦。感谢您的理解与支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "vIxkXDnA95dQ",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4393.932887581607,
+        "y": 533.4135703198227
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 感谢您对我们的支持，目前 Osmo Pocket 3 深受大家欢迎，销售火爆抢购人数较多。我们已在加紧生产，以便及时补充库存。 烦请您持续关注，我们也希望您能尽早体验到心仪的产品。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "cSqE62upApyM",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3693.714022931458,
+        "y": 682.9578002074174
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 Osmo Pocket 3 全能套装（&yen;4499）属于<strong>一体包装</strong>，相比较于标准版额外包含了 DJI Mic 2 发射器（透明黑）、续航手柄、迷你三脚架和全新收纳包等实用配件，可以帮助到您在创作中一步到位，并且机器 SN 号是一一对应的，故<strong>不支持单独退掉配件</strong>，抢购不易，建议留用哦。感谢您的理解与支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "cNSSdYKTSaXB",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4369.88231825592,
+        "y": 887.7306191271731
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>DJI Care 随心换服务可为您提供低价置换保障，覆盖意外跌落、进水等情况。我们真诚<strong>建议您保留此服务</strong>。</p>\n<p><strong>请注意：</strong>如您已使用过随心换的任一服务，则无法退出随心换服务计划。</p><card-button-msg data='{\"list\":[{\"displayContent\":\"随心换购买条件\", \"title\": \"随心换购买条件\"},{\"displayContent\":\"人工协助\", \"title\": \"人工协助\"}]}' ></card-button-msg>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "qkRD3sb0Yhum",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4386.996288616001,
+        "y": -79.77115209866011
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p><font size=\"3\">Osmo Pocket 3 标准版、Osmo Pocket 3 全能版将在购买次日发货，默认使用<strong>顺丰</strong>或<strong>京东</strong>配送，暂不支持延迟发货，感谢您的理解与支持。</font></p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "i5ojThp75MCh",
+      "name": "购买链接-多轮",
+      "intro": "可以发出一个 HTTP 请求，实现更为复杂的操作（联网搜索、数据库查询等）",
+      "avatar": "core/workflow/template/httpRequest",
+      "flowNodeType": "httpRequest468",
+      "showStatus": true,
+      "position": {
+        "x": 3703.166693538734,
+        "y": 989.6500242379641
+      },
+      "inputs": [
+        {
+          "key": "system_addInputParam",
+          "renderTypeList": [
+            "addInputParam"
+          ],
+          "valueType": "dynamic",
+          "label": "",
+          "required": false,
+          "description": "common:core.module.input.description.HTTP Dynamic Input",
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          },
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpMethod",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "string",
+          "label": "",
+          "value": "POST",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpTimeout",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "number",
+          "label": "",
+          "value": 30,
+          "min": 5,
+          "max": 600,
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpReqUrl",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Url",
+          "placeholder": "https://api.ai.com/getInventory",
+          "required": false,
+          "value": "https://ai.djicorp.com/ai/fastgpt-api/api/v1/chat/completions",
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_header_secret",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "object",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpHeader",
+          "renderTypeList": [
+            "custom"
+          ],
+          "valueType": "any",
+          "value": [
+            {
+              "key": "Content-Type",
+              "type": "string",
+              "value": "application/json"
+            },
+            {
+              "key": "Authorization",
+              "type": "string",
+              "value": "Bearer fastgpt-fDXCawuoo8U4feC5sFO74yDUXEdUTmyBhhVzsA3CfHJ4w4rpeyjI4QE"
+            }
+          ],
+          "label": "",
+          "description": "common:core.module.input.description.Http Request Header",
+          "placeholder": "common:core.module.input.description.Http Request Header",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpParams",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpJsonBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": "{\r\n    \"AppId\": \"6752c93898a04fcbf5373b1f\",\r\n    \"detail\": \"false\",\r\n    \"messages\": [{\"role\": \"user\", \"content\": \"{{query}}\"}]\r\n}",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpFormBody",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "value": [],
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "system_httpContentType",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "string",
+          "value": "json",
+          "label": "",
+          "required": false,
+          "debugLabel": "",
+          "toolDescription": ""
+        },
+        {
+          "key": "query",
+          "valueType": "string",
+          "label": "query",
+          "renderTypeList": [
+            "reference"
+          ],
+          "description": "",
+          "canEdit": true,
+          "editField": {
+            "key": true,
+            "valueType": true
+          },
+          "value": [
+            "448745",
+            "userChatInput"
+          ],
+          "customInputConfig": {
+            "selectValueTypeList": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "arrayString",
+              "arrayNumber",
+              "arrayBoolean",
+              "arrayObject",
+              "arrayAny",
+              "any",
+              "chatHistory",
+              "datasetQuote",
+              "dynamic",
+              "selectDataset",
+              "selectApp"
+            ],
+            "showDescription": false,
+            "showDefaultValue": true
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "id": "httpRawResponse",
+          "key": "httpRawResponse",
+          "label": "workflow:raw_response",
+          "description": "Raw HTTP response. Only accepts string or JSON type response data.",
+          "valueType": "any",
+          "type": "static",
+          "required": true
+        },
+        {
+          "id": "error",
+          "key": "error",
+          "label": "workflow:error_text",
+          "valueType": "string",
+          "type": "error",
+          "description": ""
+        },
+        {
+          "id": "system_addOutputParam",
+          "key": "system_addOutputParam",
+          "type": "dynamic",
+          "valueType": "dynamic",
+          "label": "",
+          "editField": {
+            "key": true,
+            "valueType": true
+          }
+        },
+        {
+          "id": "fO14oW8RfV6k",
+          "type": "dynamic",
+          "key": "choices[0].message.content",
+          "valueType": "string",
+          "label": "choices[0].message.content"
+        }
+      ],
+      "catchError": true
+    },
+    {
+      "nodeId": "hcvwQ1yydYFN",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4645.466178271557,
+        "y": 1245.4329194440468
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "selectedTypeIndex": 1,
+          "value": [
+            "i5ojThp75MCh",
+            "fO14oW8RfV6k"
+          ],
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "uaTVnyGeRd6o",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3886.198358302353,
+        "y": 4852.313688551206
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您对 Osmo Pocket 3 的喜爱，不同产品的需求量不同导致的，由于 Pocket 3 需求量更大，销售火爆，才会导致暂时无货。如果产品量充足，我们肯定是希望用户都能体验到自家产品的，您可以关注后续的补货情况哦。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "qqU8KNg9QDVs",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4672.1612521244615,
+        "y": 4684.248736934706
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo Pocket 3 标准版与全能套装是两个<strong>不同的套装</strong>，不支持直接更换，如果您更喜欢另一个套装，欢迎您再次抢购，非常感谢您的支持和喜爱。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "f5elrBTE8ZEj",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3886.7534452860637,
+        "y": 4534.994027465315
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo Pocket 3 标准版、Osmo Pocket 3 全能版为<strong>购买次日发货</strong>，默认使用<strong>顺丰</strong>或<strong>京东</strong>配送，暂不支持延迟发货，感谢您的理解与支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "crPOnW4lWL0e",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4563.589530900119,
+        "y": 4361.14336208315
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>DJI Care 随心换服务为您提供低价置换保障，覆盖意外跌落、进水等情况。我们真诚建议您保留此服务。<br /><br />如需退款，请在<span style=\"color: #ff6600;\">订单未签收或签收次日起 7 天内</span> ，可在下方登记随心换退款信息，收到申请后&nbsp;<span style=\"color: #ff6600;\">2-7 个工作日</span>内处理退款申请。 <br /><br /><a title=\"\" style=\"display: inline-block; color: #2c7cf6; border-radius: 20px; border: 1px solid #2C7CF6; padding: 4px 12px; margin: 3px 4px; cursor: pointer; text-decoration: none;\" class=\"\" href=\"https://formscn.zohopublic.com.cn/requestform/form/Untitled10/formperma/avtu3cQQpS28LBbsQwvR-dc-y1lXTWPl7iuykddhsrQ\" target=\"_blank\" referrerpolicy=\"no-referrer\">Care 随心换退款登记</a><br /><br /><span style=\"color: #000000;\"><strong>退款时效：<br /></strong></span><span style=\"color: #ff6600;\"><span style=\"color: #000000;\">&bull;</span> 已签收订单退款</span>将于 <span style=\"color: #ff6600;\">2-7 个工作日</span>内原路返回。<br /><span style=\"color: #ff6600;\"><span style=\"color: #000000;\">&bull;</span> 未签收订单退款</span>将在签收后 <span style=\"color: #ff6600;\">2-7 个工作日</span>内原路返回。 <br /><br /></p><p><strong>请注意：</strong>如您已使用过随心换的任一服务，则无法退出随心换服务计划。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "qy7NJap8mGUx",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3912.071503351427,
+        "y": 4239.616683369405
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo Pocket 3 Vlog 套装中的无线麦克风轻小便携，在您日常拍摄中可以收录清晰的声音，抢购不易我们是更推荐您保留的。</p>\n<p>如果您确定要单独退无线麦克风的话，请您在物流签收次日起的 30 个自然日内，申请退货退款，并将无线麦克风保持完整包装寄回。待寄回售后核验符合退货条件后，我们会为您处理好订单退货退款❤️</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "dn4gX4zN7ySJ",
+      "name": "抢购场景",
+      "intro": "根据一定的条件，执行不同的分支。",
+      "avatar": "core/workflow/template/ifelse",
+      "flowNodeType": "ifElseNode",
+      "showStatus": true,
+      "position": {
+        "x": -391.9330337386241,
+        "y": 2183.701873382411
+      },
+      "inputs": [
+        {
+          "key": "ifElseList",
+          "renderTypeList": [
+            "hidden"
+          ],
+          "valueType": "any",
+          "label": "",
+          "value": [
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "抢购期间系统异常？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": " Pocket 3 退货咨询"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "更多 Pocket 3 问题"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "Pocket 3 为什么那么难抢？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "当前商品抢购人数过多"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "请返回商品详情页购买"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "为什么无法进入支付页面"
+                }
+              ]
+            },
+            {
+              "condition": "OR",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "其他异常问题"
+                },
+                {
+                  "value": "其他抢购异常问题",
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith"
+                }
+              ]
+            },
+            {
+              "condition": "OR",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "Pocket 3 下次补货是什么时候？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "Pocket 3 标准版还补货吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "一个用户能买几台 Pocket 3 ？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "11点准时补货吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "购买全能版后可以退配件吗？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "Vlog 套装可以退线麦克风吗"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "Care 随心换能退吗",
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "Pocket 3 发货时间",
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "value": "可以更换不同套装吗",
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "endWith",
+                  "value": "Pocket 3 什么时候开抢？"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "黄牛"
+                }
+              ]
+            },
+            {
+              "condition": "AND",
+              "list": [
+                {
+                  "variable": [
+                    "448745",
+                    "userChatInput"
+                  ],
+                  "condition": "include",
+                  "value": "为什么无法提交订单"
+                }
+              ]
+            }
+          ],
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": [
+        {
+          "id": "ifElseResult",
+          "key": "ifElseResult",
+          "label": "workflow:judgment_result",
+          "valueType": "string",
+          "type": "static",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "nodeId": "oFwlSry1rLze",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3909.137513154392,
+        "y": 2988.2549842070193
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 收到您反馈的信息，因访问下单用户较多，访问可能会出现拥堵。</p>\n<p>建议您通过&ldquo;商品详情页&rdquo;，点击&ldquo;立即购买&rdquo;进行抢购。感谢您的关注和支持。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "up0scWkfQs7t",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4565.309819886522,
+        "y": 5000.006467561401
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您的关注和喜爱，Osmo Pocket 3 是咱们的热销产品，数量没有具体通知，建议您做好关注，及时抢购。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "igGTx5YOFwfG",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3937.1405468558405,
+        "y": 5138.477560917056
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>🔥 感谢您对 Osmo Pocket 3 的喜爱，目前这款产品销售比较火爆，抢购人数较多，页面可能会出现拥堵，建议您持续快速点击提交订单进行支付。感谢您的选择和支持，希望您尽早体验到心仪产品。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "kwlWGgWsUtZY",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 2873.2874684194717,
+        "y": 5590.566314853715
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您对 Osmo&nbsp;Pocket&nbsp;3 的关注，产品补货会基于实际库存情况调整，请您关注商品页面<a title=\"\" style=\"display: inline-block; margin: 2px 0 4px; cursor: pointer; color: #0066cc; text-decoration: underline; vertical-align: middle;\" class=\"\" href=\"https://store.dji.com/cn/product/osmo-pocket-3?site=brandsite&amp;from=landing_page&amp;vid=153291\" target=\"_blank\" referrerpolicy=\"no-referrer\">点击购买</a>。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "mVY2PTuYb7CO",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 3589.120510013765,
+        "y": 5740.660339704131
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo&nbsp;Pocket&nbsp;3 深受大家喜爱，目前我们已经在加急生产和及时补充库存。为了更多客户可以尽早体验这款产品，结合库存、订单情况，今日开展了二次抢购，感谢您的关注❤️</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "ufVQCWc1pFyy",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 2874.9368533079373,
+        "y": 5917.144522770006
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>感谢您对&nbsp;Osmo&nbsp;Pocket&nbsp;3&nbsp;的喜爱，目前这款产品销售比较火爆，抢购人数较多，页面可能会出现拥堵。为了更多客户可以早点体验 Pocket&nbsp;3这款产品，今日也开展了二次抢购，如果您暂时没有抢到请您消消气，欢迎关注下次抢购时间。我们正加急生产，下次努力补充更多库存。</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "nodeId": "jZhGxCQryLvU",
+      "name": "指定回复",
+      "intro": "该模块可以直接回复一段指定的内容。常用于引导、提示。非字符串内容传入时，会转成字符串进行输出。",
+      "avatar": "core/workflow/template/reply",
+      "flowNodeType": "answerNode",
+      "position": {
+        "x": 4379.147874237585,
+        "y": 1430.780792651396
+      },
+      "inputs": [
+        {
+          "key": "text",
+          "renderTypeList": [
+            "textarea",
+            "reference"
+          ],
+          "valueType": "any",
+          "label": "common:core.module.input.label.Response content",
+          "description": "common:core.module.input.description.Response content",
+          "placeholder": "common:core.module.input.description.Response content",
+          "value": "<p>Osmo Pocket 3 Vlog 套装中的无线麦克风轻小便携，在您日常拍摄中可以收录清晰的声音，抢购不易我们是更推荐您保留的。</p>\n<p>如果您确定要单独退无线麦克风的话，请您在物流签收次日起的 30 个自然日内，申请退货退款，并将无线麦克风保持完整包装寄回。待寄回售后核验符合退货条件后，我们会为您处理好订单退货退款❤️</p>",
+          "required": true,
+          "debugLabel": "",
+          "toolDescription": ""
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "loOvhld2ZTKa",
+      "target": "pZAaseRWCJKQ",
+      "sourceHandle": "loOvhld2ZTKa-source-right",
+      "targetHandle": "pZAaseRWCJKQ-target-left"
+    },
+    {
+      "source": "pZAaseRWCJKQ",
+      "target": "nfpbGetkLG8w",
+      "sourceHandle": "pZAaseRWCJKQ-source-IF",
+      "targetHandle": "nfpbGetkLG8w-target-left"
+    },
+    {
+      "source": "pZAaseRWCJKQ",
+      "target": "nfpbGetkLG8w",
+      "sourceHandle": "pZAaseRWCJKQ-source-ELSE IF 1",
+      "targetHandle": "nfpbGetkLG8w-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "qA2nhr7hb0dE",
+      "sourceHandle": "nfpbGetkLG8w-source-IF",
+      "targetHandle": "qA2nhr7hb0dE-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "eEuRzaI3dVxe",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 2",
+      "targetHandle": "eEuRzaI3dVxe-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "jVhlBvkkYf0W",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 3",
+      "targetHandle": "jVhlBvkkYf0W-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "hOzbKWW4DalF",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 4",
+      "targetHandle": "hOzbKWW4DalF-target-left"
+    },
+    {
+      "source": "pZAaseRWCJKQ",
+      "target": "n5wvMmSwD6X5",
+      "sourceHandle": "pZAaseRWCJKQ-source-ELSE",
+      "targetHandle": "n5wvMmSwD6X5-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "n5wvMmSwD6X5",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE",
+      "targetHandle": "n5wvMmSwD6X5-target-left"
+    },
+    {
+      "source": "n5wvMmSwD6X5",
+      "target": "iRsIklsEpUN5",
+      "sourceHandle": "n5wvMmSwD6X5-source-right",
+      "targetHandle": "iRsIklsEpUN5-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "loOvhld2ZTKa",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE",
+      "targetHandle": "loOvhld2ZTKa-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "zP645HE8XnZZ",
+      "sourceHandle": "hVgOIfLvNSjD-source-IF",
+      "targetHandle": "zP645HE8XnZZ-target-left"
+    },
+    {
+      "source": "zP645HE8XnZZ",
+      "target": "xWT0jcXVLv8t",
+      "sourceHandle": "zP645HE8XnZZ-source-right",
+      "targetHandle": "xWT0jcXVLv8t-target-left"
+    },
+    {
+      "source": "448745",
+      "target": "uiG4j17QDrd8",
+      "sourceHandle": "448745-source-right",
+      "targetHandle": "uiG4j17QDrd8-target-left"
+    },
+    {
+      "source": "uiG4j17QDrd8",
+      "target": "hVgOIfLvNSjD",
+      "sourceHandle": "uiG4j17QDrd8-source-ELSE",
+      "targetHandle": "hVgOIfLvNSjD-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "pjL8NO8z24yj",
+      "sourceHandle": "dBQUSo3d0HOM-source-IF",
+      "targetHandle": "pjL8NO8z24yj-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "aeHnbCrjL3UQ",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 1",
+      "targetHandle": "aeHnbCrjL3UQ-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "cccNOwHh9WB0",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 2",
+      "targetHandle": "cccNOwHh9WB0-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "xQCGKYEYdrbf",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 3",
+      "targetHandle": "xQCGKYEYdrbf-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "q9c0zlGnbuGN",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 4",
+      "targetHandle": "q9c0zlGnbuGN-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "swCKQBb19y74",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 5",
+      "targetHandle": "swCKQBb19y74-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "alnqWnJVO7Ko",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 7",
+      "targetHandle": "alnqWnJVO7Ko-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "v4oZ4bh6LNYm",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 8",
+      "targetHandle": "v4oZ4bh6LNYm-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "zUmSU0vfqi3Z",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 9",
+      "targetHandle": "zUmSU0vfqi3Z-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "uZL9PLp00dTq",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 10",
+      "targetHandle": "uZL9PLp00dTq-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "xPC87UNBMFMm",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 11",
+      "targetHandle": "xPC87UNBMFMm-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "a56icauK5Led",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 12",
+      "targetHandle": "a56icauK5Led-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "ccbFuFygVIbm",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 13",
+      "targetHandle": "ccbFuFygVIbm-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "n5wvMmSwD6X5",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE",
+      "targetHandle": "n5wvMmSwD6X5-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "vIxkXDnA95dQ",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 5",
+      "targetHandle": "vIxkXDnA95dQ-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "cSqE62upApyM",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 6",
+      "targetHandle": "cSqE62upApyM-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "cNSSdYKTSaXB",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 7",
+      "targetHandle": "cNSSdYKTSaXB-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "qkRD3sb0Yhum",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 1",
+      "targetHandle": "qkRD3sb0Yhum-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "hOzbKWW4DalF",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 1",
+      "targetHandle": "hOzbKWW4DalF-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "vIxkXDnA95dQ",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 2",
+      "targetHandle": "vIxkXDnA95dQ-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "cSqE62upApyM",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 3",
+      "targetHandle": "cSqE62upApyM-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "cNSSdYKTSaXB",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 4",
+      "targetHandle": "cNSSdYKTSaXB-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "qA2nhr7hb0dE",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 5",
+      "targetHandle": "qA2nhr7hb0dE-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "i5ojThp75MCh",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 8",
+      "targetHandle": "i5ojThp75MCh-target-left"
+    },
+    {
+      "source": "i5ojThp75MCh",
+      "target": "hcvwQ1yydYFN",
+      "sourceHandle": "i5ojThp75MCh-source-right",
+      "targetHandle": "hcvwQ1yydYFN-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "qy7NJap8mGUx",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 14",
+      "targetHandle": "qy7NJap8mGUx-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "crPOnW4lWL0e",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 15",
+      "targetHandle": "crPOnW4lWL0e-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "f5elrBTE8ZEj",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 16",
+      "targetHandle": "f5elrBTE8ZEj-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "qqU8KNg9QDVs",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 17",
+      "targetHandle": "qqU8KNg9QDVs-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "uaTVnyGeRd6o",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 18",
+      "targetHandle": "uaTVnyGeRd6o-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "jVhlBvkkYf0W",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 6",
+      "targetHandle": "jVhlBvkkYf0W-target-left"
+    },
+    {
+      "source": "uiG4j17QDrd8",
+      "target": "dn4gX4zN7ySJ",
+      "sourceHandle": "uiG4j17QDrd8-source-IF",
+      "targetHandle": "dn4gX4zN7ySJ-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "oaKVvyF4x2D3",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE",
+      "targetHandle": "oaKVvyF4x2D3-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "aeHnbCrjL3UQ",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 17",
+      "targetHandle": "aeHnbCrjL3UQ-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "pjL8NO8z24yj",
+      "sourceHandle": "dn4gX4zN7ySJ-source-IF",
+      "targetHandle": "pjL8NO8z24yj-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "cccNOwHh9WB0",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 1",
+      "targetHandle": "cccNOwHh9WB0-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "xQCGKYEYdrbf",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 2",
+      "targetHandle": "xQCGKYEYdrbf-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "q9c0zlGnbuGN",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 3",
+      "targetHandle": "q9c0zlGnbuGN-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "swCKQBb19y74",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 4",
+      "targetHandle": "swCKQBb19y74-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "alnqWnJVO7Ko",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 6",
+      "targetHandle": "alnqWnJVO7Ko-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "v4oZ4bh6LNYm",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 7",
+      "targetHandle": "v4oZ4bh6LNYm-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "zUmSU0vfqi3Z",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 8",
+      "targetHandle": "zUmSU0vfqi3Z-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "uZL9PLp00dTq",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 9",
+      "targetHandle": "uZL9PLp00dTq-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "xPC87UNBMFMm",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 10",
+      "targetHandle": "xPC87UNBMFMm-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "a56icauK5Led",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 11",
+      "targetHandle": "a56icauK5Led-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "ccbFuFygVIbm",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 12",
+      "targetHandle": "ccbFuFygVIbm-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "qy7NJap8mGUx",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 13",
+      "targetHandle": "qy7NJap8mGUx-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "crPOnW4lWL0e",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 14",
+      "targetHandle": "crPOnW4lWL0e-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "f5elrBTE8ZEj",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 15",
+      "targetHandle": "f5elrBTE8ZEj-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "qqU8KNg9QDVs",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 16",
+      "targetHandle": "qqU8KNg9QDVs-target-left"
+    },
+    {
+      "source": "oaKVvyF4x2D3",
+      "target": "dBQUSo3d0HOM",
+      "sourceHandle": "oaKVvyF4x2D3-source-right",
+      "targetHandle": "dBQUSo3d0HOM-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "oFwlSry1rLze",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 6",
+      "targetHandle": "oFwlSry1rLze-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "oFwlSry1rLze",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 5",
+      "targetHandle": "oFwlSry1rLze-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "up0scWkfQs7t",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 19",
+      "targetHandle": "up0scWkfQs7t-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "uaTVnyGeRd6o",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 18",
+      "targetHandle": "uaTVnyGeRd6o-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "igGTx5YOFwfG",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 20",
+      "targetHandle": "igGTx5YOFwfG-target-left"
+    },
+    {
+      "source": "dn4gX4zN7ySJ",
+      "target": "igGTx5YOFwfG",
+      "sourceHandle": "dn4gX4zN7ySJ-source-ELSE IF 19",
+      "targetHandle": "igGTx5YOFwfG-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "alnqWnJVO7Ko",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 7",
+      "targetHandle": "alnqWnJVO7Ko-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "kwlWGgWsUtZY",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 21",
+      "targetHandle": "kwlWGgWsUtZY-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "mVY2PTuYb7CO",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 22",
+      "targetHandle": "mVY2PTuYb7CO-target-left"
+    },
+    {
+      "source": "dBQUSo3d0HOM",
+      "target": "ufVQCWc1pFyy",
+      "sourceHandle": "dBQUSo3d0HOM-source-ELSE IF 23",
+      "targetHandle": "ufVQCWc1pFyy-target-left"
+    },
+    {
+      "source": "nfpbGetkLG8w",
+      "target": "jZhGxCQryLvU",
+      "sourceHandle": "nfpbGetkLG8w-source-ELSE IF 9",
+      "targetHandle": "jZhGxCQryLvU-target-left"
+    },
+    {
+      "source": "hVgOIfLvNSjD",
+      "target": "jZhGxCQryLvU",
+      "sourceHandle": "hVgOIfLvNSjD-source-ELSE IF 8",
+      "targetHandle": "jZhGxCQryLvU-target-left"
+    },
+    {
+      "source": "n5wvMmSwD6X5",
+      "target": "iRsIklsEpUN5",
+      "sourceHandle": "n5wvMmSwD6X5-source_catch-right",
+      "targetHandle": "iRsIklsEpUN5-target-left"
+    },
+    {
+      "source": "zP645HE8XnZZ",
+      "target": "xWT0jcXVLv8t",
+      "sourceHandle": "zP645HE8XnZZ-source_catch-right",
+      "targetHandle": "xWT0jcXVLv8t-target-left"
+    },
+    {
+      "source": "i5ojThp75MCh",
+      "target": "hcvwQ1yydYFN",
+      "sourceHandle": "i5ojThp75MCh-source_catch-right",
+      "targetHandle": "hcvwQ1yydYFN-target-left"
+    }
+  ],
+  "chatConfig": {
+    "variables": [],
+    "scheduledTriggerConfig": {
+      "cronString": "",
+      "timezone": "Etc/GMT-8",
+      "defaultPrompt": ""
+    },
+    "_id": "689a989822cd8100a12ddfec"
+  }
+}
