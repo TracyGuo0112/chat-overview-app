@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, RefreshCw, Star } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -47,6 +47,13 @@ interface OverviewKpis {
   currentSubscribedUsers: number
 }
 
+interface OverviewDefinitions {
+  timezone?: string
+  todayActiveUsers?: string
+  currentOnlineUsers?: string
+  lowRemainingUsers?: string
+}
+
 interface OverviewRow {
   conversationId: string
   customerId: string
@@ -68,6 +75,7 @@ interface OverviewPayload {
   kpis: OverviewKpis
   total: number
   rows: OverviewRow[]
+  definitions?: OverviewDefinitions
 }
 
 const defaultKpis: OverviewKpis = {
@@ -75,6 +83,12 @@ const defaultKpis: OverviewKpis = {
   todayActiveUsers: 0,
   currentOnlineUsers: 0,
   currentSubscribedUsers: 0,
+}
+
+const defaultDefinitions: OverviewDefinitions = {
+  timezone: 'Asia/Shanghai',
+  todayActiveUsers: '当日有对话的去重用户数',
+  currentOnlineUsers: '5分钟内有会话活跃的去重用户数',
 }
 
 const route = getRouteApi('/_authenticated/')
@@ -91,6 +105,8 @@ export function Dashboard() {
   const [kpis, setKpis] = useState<OverviewKpis>(defaultKpis)
   const [rows, setRows] = useState<OverviewRow[]>([])
   const [total, setTotal] = useState(0)
+  const [definitions, setDefinitions] =
+    useState<OverviewDefinitions>(defaultDefinitions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [countdown, setCountdown] = useState(30)
@@ -107,7 +123,7 @@ export function Dashboard() {
   const allChecked =
     rows.length > 0 && rows.every((x) => selected[x.conversationId])
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -142,6 +158,7 @@ export function Dashboard() {
         throw new Error('接口返回空内容')
       }
       setKpis({ ...defaultKpis, ...(data.kpis ?? {}) })
+      setDefinitions({ ...defaultDefinitions, ...(data.definitions ?? {}) })
       const normalizedRows = (data.rows ?? []).map((row) => ({
         ...row,
         totalChatCount: Number(
@@ -182,7 +199,7 @@ export function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [customerIdFilter, dateRange, keyword, membership, remaining])
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -190,10 +207,9 @@ export function Dashboard() {
       setCountdown(30)
     }, 300)
     return () => window.clearTimeout(t)
-  }, [dateRange, membership, remaining, keyword, customerIdFilter])
+  }, [loadData])
 
   useEffect(() => {
-    void loadData()
     const timer = window.setInterval(() => {
       setCountdown((v) => {
         if (v <= 1) {
@@ -204,7 +220,7 @@ export function Dashboard() {
       })
     }, 1000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [loadData])
 
   const runBatchAction = (label: string) => {
     if (selectedIds.length === 0) {
@@ -275,6 +291,10 @@ export function Dashboard() {
             <p className='text-sm text-muted-foreground'>
               运营 10 秒查看最新会话（展示最新 10-15
               条），支持快速筛选与批量处理
+            </p>
+            <p className='mt-1 text-xs text-muted-foreground'>
+              口径：{definitions.todayActiveUsers}；{definitions.currentOnlineUsers}
+              （时区 {definitions.timezone || 'Asia/Shanghai'}）
             </p>
           </div>
           <Button

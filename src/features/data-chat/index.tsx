@@ -91,7 +91,11 @@ export function DataChat() {
       const raw = await resp.text()
       let payload: DbChatResponse | null = null
       if (raw.trim()) {
-        payload = JSON.parse(raw) as DbChatResponse
+        try {
+          payload = JSON.parse(raw) as DbChatResponse
+        } catch {
+          throw new Error(`接口返回非JSON内容（HTTP ${resp.status}）`)
+        }
       }
 
       if (!resp.ok) {

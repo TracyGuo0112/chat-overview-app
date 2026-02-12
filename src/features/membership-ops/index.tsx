@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import {
   Bar,
@@ -44,6 +44,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 type FunnelPayload = {
   visitors: number | null
   registered: number
+  activeUsers: number
   subscribed: number
   renewed: number
   conversion: {
@@ -76,6 +77,7 @@ type TrendPoint = {
   registered: number
   subscribed: number
   renewed: number
+  activeUsers: number
 }
 
 type MembershipOpsPayload = {
@@ -134,59 +136,59 @@ export function MembershipOps() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const loadData = async (nextRange?: {
-    startDate: string
-    endDate: string
-  }) => {
-    setLoading(true)
-    setError('')
+  const loadData = useCallback(
+    async (nextRange?: { startDate: string; endDate: string }) => {
+      setLoading(true)
+      setError('')
 
-    try {
-      const startDate = nextRange?.startDate ?? draftStartDate
-      const endDate = nextRange?.endDate ?? draftEndDate
-      const qs = new URLSearchParams()
-      if (startDate && endDate) {
-        qs.set('startDate', startDate)
-        qs.set('endDate', endDate)
-      }
-
-      const url = qs.toString()
-        ? `/api/membership-ops?${qs.toString()}`
-        : '/api/membership-ops'
-      const resp = await fetch(url)
-      const raw = await resp.text()
-      let payload: MembershipOpsPayload | null = null
-
-      if (raw.trim()) {
-        try {
-          payload = JSON.parse(raw) as MembershipOpsPayload
-        } catch {
-          throw new Error(`接口返回非JSON内容（HTTP ${resp.status}）`)
+      try {
+        const startDate = nextRange?.startDate ?? draftStartDate
+        const endDate = nextRange?.endDate ?? draftEndDate
+        const qs = new URLSearchParams()
+        if (startDate && endDate) {
+          qs.set('startDate', startDate)
+          qs.set('endDate', endDate)
         }
-      }
 
-      if (!resp.ok) {
-        const message = (payload as unknown as { message?: string } | null)
-          ?.message
-        throw new Error(message || `请求失败（HTTP ${resp.status}）`)
-      }
-      if (!payload) {
-        throw new Error('接口返回空内容')
-      }
+        const url = qs.toString()
+          ? `/api/membership-ops?${qs.toString()}`
+          : '/api/membership-ops'
+        const resp = await fetch(url)
+        const raw = await resp.text()
+        let payload: MembershipOpsPayload | null = null
 
-      setData(payload)
-      setDraftStartDate(payload.range.startDate)
-      setDraftEndDate(payload.range.endDate)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '会员运营分析加载失败')
-    } finally {
-      setLoading(false)
-    }
-  }
+        if (raw.trim()) {
+          try {
+            payload = JSON.parse(raw) as MembershipOpsPayload
+          } catch {
+            throw new Error(`接口返回非JSON内容（HTTP ${resp.status}）`)
+          }
+        }
+
+        if (!resp.ok) {
+          const message = (payload as unknown as { message?: string } | null)
+            ?.message
+          throw new Error(message || `请求失败（HTTP ${resp.status}）`)
+        }
+        if (!payload) {
+          throw new Error('接口返回空内容')
+        }
+
+        setData(payload)
+        setDraftStartDate(payload.range.startDate)
+        setDraftEndDate(payload.range.endDate)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '会员运营分析加载失败')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [draftEndDate, draftStartDate]
+  )
 
   useEffect(() => {
     void loadData()
-  }, [])
+  }, [loadData])
 
   const funnelData = useMemo(() => {
     if (!data) return []
@@ -325,12 +327,20 @@ export function MembershipOps() {
           </p>
         ) : null}
 
-        <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
+        <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-5'>
           <Card>
             <CardHeader className='pb-2'>
               <CardDescription>游客（访问）</CardDescription>
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.visitors)}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className='pb-2'>
+              <CardDescription>活跃人数（有对话）</CardDescription>
+              <CardTitle className='text-2xl'>
+                {formatNumber(data?.funnel.activeUsers)}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -447,7 +457,7 @@ export function MembershipOps() {
           <CardHeader>
             <CardTitle>转化趋势（按天）</CardTitle>
             <CardDescription>
-              展示注册、订阅、续费人数的每日趋势。
+              展示活跃用户、注册、订阅、续费人数的每日趋势。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -459,6 +469,14 @@ export function MembershipOps() {
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
+                  <Line
+                    type='monotone'
+                    dataKey='activeUsers'
+                    name='活跃用户'
+                    stroke='#10b981'
+                    strokeWidth={2}
+                    dot={false}
+                  />
                   <Line
                     type='monotone'
                     dataKey='registered'

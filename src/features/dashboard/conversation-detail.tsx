@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   ArrowDown,
@@ -399,7 +399,7 @@ export function ConversationDetailPage({
   const [detail, setDetail] = useState<ConversationDetail | null>(null)
   const [copiedId, setCopiedId] = useState('')
 
-  async function loadDetail() {
+  const loadDetail = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -407,23 +407,34 @@ export function ConversationDetailPage({
         `/api/conversation/${encodeURIComponent(conversationId)}`
       )
       const raw = await resp.text()
-      const data = raw ? JSON.parse(raw) : null
-      if (!resp.ok) {
-        throw new Error(data?.message ?? `请求失败（HTTP ${resp.status}）`)
+      let data: { message?: string } | ConversationDetail | null = null
+      if (raw.trim()) {
+        try {
+          data = JSON.parse(raw) as ConversationDetail
+        } catch {
+          throw new Error(`接口返回非JSON内容（HTTP ${resp.status}）`)
+        }
       }
-      setDetail(data)
+      if (!resp.ok) {
+        const errMessage = (data as { message?: string } | null)?.message
+        throw new Error(errMessage ?? `请求失败（HTTP ${resp.status}）`)
+      }
+      if (!data) {
+        throw new Error('接口返回空内容')
+      }
+      setDetail(data as ConversationDetail)
     } catch (err) {
       setError(err instanceof Error ? err.message : '详情加载失败')
     } finally {
       setLoading(false)
     }
-  }
+  }, [conversationId])
 
   useEffect(() => {
     void loadDetail()
-  }, [conversationId])
+  }, [loadDetail])
 
-  const messages = detail?.messages ?? []
+  const messages = useMemo(() => detail?.messages ?? [], [detail?.messages])
   const messageCount = messages.length
   const firstUserIndex = useMemo(
     () => messages.findIndex((x) => normalizedRole(x.role) === 'user'),
