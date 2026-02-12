@@ -1122,6 +1122,22 @@ async function queryOverview(params) {
       join chat_thread t on t.id = m.thread_id
       where m.role = 'user'
       group by t.user_id
+    ),
+    first_user_message as (
+      select
+        m.thread_id,
+        min(m.created_at) as first_user_message_at
+      from chat_message m
+      where m.role = 'user'
+      group by m.thread_id
+    ),
+    first_assistant_message as (
+      select
+        m.thread_id,
+        min(m.created_at) as first_assistant_message_at
+      from chat_message m
+      where m.role = 'assistant'
+      group by m.thread_id
     )
     select
       t.id as conversation_id,
@@ -1135,6 +1151,8 @@ async function queryOverview(params) {
       lm.last_message_parts,
       lm.last_feedback,
       lm.last_message_at,
+      fum.first_user_message_at,
+      fam.first_assistant_message_at,
       coalesce(lg.status, $1) as membership_status,
       coalesce(lg.tier, $2) as membership_tier,
       coalesce(umc.message_count, 0) as total_chat_count,
@@ -1145,6 +1163,8 @@ async function queryOverview(params) {
     left join latest_msg lm on lm.thread_id = t.id
     left join latest_grant lg on lg.user_id = t.user_id
     left join user_message_count umc on umc.user_id = t.user_id
+    left join first_user_message fum on fum.thread_id = t.id
+    left join first_assistant_message fam on fam.thread_id = t.id
     ${whereClause}
     order by t.updated_at desc nulls last
     limit $${filterParams.length + 1}
@@ -1180,16 +1200,30 @@ async function queryOverview(params) {
       select
         t.id,
         t.user_id,
-        t.created_at,
-        t.updated_at,
-        lm.last_feedback,
-        lm.last_message_role,
-        lm.last_message_at
+        lm.last_feedback
       from chat_thread t
       left join latest_msg lm on lm.thread_id = t.id
       cross join bounds b
       where t.updated_at >= b.start_ts
         and t.updated_at < b.end_ts
+    ),
+    first_user_message as (
+      select
+        m.thread_id,
+        min(m.created_at) as first_user_message_at
+      from chat_message m
+      join today_threads tt on tt.id = m.thread_id
+      where m.role = 'user'
+      group by m.thread_id
+    ),
+    first_assistant_message as (
+      select
+        m.thread_id,
+        min(m.created_at) as first_assistant_message_at
+      from chat_message m
+      join today_threads tt on tt.id = m.thread_id
+      where m.role = 'assistant'
+      group by m.thread_id
     )
     select
       count(*)::int as today_conversations,
@@ -1198,8 +1232,10 @@ async function queryOverview(params) {
         round(
           avg(
             case
-              when tt.last_message_role = 'assistant' and tt.last_message_at is not null
-                then greatest(extract(epoch from (tt.last_message_at - tt.created_at)) / 60.0, 0)
+              when fam.first_assistant_message_at is not null
+                   and fum.first_user_message_at is not null
+                   and fam.first_assistant_message_at >= fum.first_user_message_at
+                then extract(epoch from (fam.first_assistant_message_at - fum.first_user_message_at)) / 60.0
             end
           )
         )::int,
@@ -1214,7 +1250,9 @@ async function queryOverview(params) {
           and m2.created_at >= b.start_ts
           and m2.created_at < b.end_ts
       ) as today_active_users
-    from today_threads tt;
+    from today_threads tt
+    left join first_user_message fum on fum.thread_id = tt.id
+    left join first_assistant_message fam on fam.thread_id = tt.id;
   `;
 
   const rowsParams = [...filterParams, limit, offset];
@@ -1253,9 +1291,15 @@ async function queryOverview(params) {
     const membershipStatus = r.membership_status || "inactive";
     const membershipTier = Number(r.membership_tier || 0);
 
+    const firstUserMessageAt = r.first_user_message_at ? new Date(r.first_user_message_at) : null;
+    const firstAssistantMessageAt = r.first_assistant_message_at ? new Date(r.first_assistant_message_at) : null;
     const approxFirstReplyMinutes =
-      r.last_message_role === "assistant" && r.conversation_created_at && r.last_message_at
-        ? Math.max(0, Math.round((new Date(r.last_message_at) - new Date(r.conversation_created_at)) / 60000))
+      firstUserMessageAt &&
+      firstAssistantMessageAt &&
+      !Number.isNaN(firstUserMessageAt.getTime()) &&
+      !Number.isNaN(firstAssistantMessageAt.getTime()) &&
+      firstAssistantMessageAt.getTime() >= firstUserMessageAt.getTime()
+        ? Math.round((firstAssistantMessageAt.getTime() - firstUserMessageAt.getTime()) / 60000)
         : null;
 
     return {
@@ -1390,57 +1434,67 @@ async function queryUsers(params = {}) {
     endDate = range.endDate;
   }
 
-  const rangeFilterField =
-    funnelSegment === "registered"
-      ? "u.created_at"
-      : funnelSegment === "firstConversation"
-        ? "fum.first_user_message_at"
-        : funnelSegment === "subscribed"
-          ? "ps.first_paid_at"
-          : funnelSegment === "renewed"
-            ? "rs.second_paid_at"
-            : "";
-
   const queryParams = [];
-  if (funnelSegment) {
-    queryParams.push(startDate, endDate);
-  }
+  const addParam = (value) => {
+    queryParams.push(value);
+    return `$${queryParams.length}`;
+  };
 
   const whereConditions = [];
+
   if (funnelSegment) {
+    const startSlot = addParam(startDate);
+    const endSlot = addParam(endDate);
+    const rangeFilterField =
+      funnelSegment === "registered"
+        ? "f.created_at"
+        : funnelSegment === "firstConversation"
+          ? "f.first_user_message_at"
+          : funnelSegment === "subscribed"
+            ? "f.first_paid_at"
+            : "f.second_paid_at";
+
     whereConditions.push(
       `${rangeFilterField} is not null`,
-      `${rangeFilterField} >= b.start_ts`,
-      `${rangeFilterField} < b.end_ts`
+      `${rangeFilterField} >= ((${startSlot}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`,
+      `${rangeFilterField} < (((${endSlot}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
     );
   }
 
   if (registerStartDate) {
-    queryParams.push(registerStartDate);
-    const startPlaceholder = `$${queryParams.length}`;
+    const startPlaceholder = addParam(registerStartDate);
     whereConditions.push(
-      `u.created_at >= ((${startPlaceholder}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`
+      `f.created_at >= ((${startPlaceholder}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`
     );
   }
   if (registerEndDate) {
-    queryParams.push(registerEndDate);
-    const endPlaceholder = `$${queryParams.length}`;
+    const endPlaceholder = addParam(registerEndDate);
     whereConditions.push(
-      `u.created_at < (((${endPlaceholder}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
+      `f.created_at < (((${endPlaceholder}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
     );
   }
+  if (nicknameKeyword) {
+    const keywordPlaceholder = addParam(`%${nicknameKeyword}%`);
+    whereConditions.push(`(
+      lower(coalesce(f.nickname, '')) like ${keywordPlaceholder}
+      or lower(coalesce(f.username, '')) like ${keywordPlaceholder}
+      or lower(coalesce(f.email, '')) like ${keywordPlaceholder}
+    )`);
+  }
 
-  const boundsCte = funnelSegment
-    ? `,
-    bounds as (
-      select
-        (($1::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
-        ((($2::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
-    )`
-    : "";
-  const boundsJoin = funnelSegment ? "cross join bounds b" : "";
+  if (subscriptionStatusFilter.length > 0) {
+    const statusSlots = subscriptionStatusFilter.map((value) => addParam(value)).join(", ");
+    whereConditions.push(`f.subscription_status in (${statusSlots})`);
+  }
+
+  if (subscriptionExpiredFilter.length > 0) {
+    const expirySlots = subscriptionExpiredFilter.map((value) => addParam(value)).join(", ");
+    whereConditions.push(`f.subscription_expired in (${expirySlots})`);
+  }
+
   const whereClause = whereConditions.length > 0 ? `where ${whereConditions.join("\n      and ")}` : "";
-  const sql = `
+
+  const baseSql = `
     with latest_grant as (
       select distinct on (g.user_id)
         g.user_id,
@@ -1499,7 +1553,7 @@ async function queryUsers(params = {}) {
         min(redeemed_at) filter (where rn = 2) as second_paid_at
       from renew_ranked
       group by email_key
-    )${boundsCte},
+    ),
     chat_stats as (
       select
         t.user_id,
@@ -1514,44 +1568,124 @@ async function queryUsers(params = {}) {
         t.id as latest_conversation_id
       from chat_thread t
       order by t.user_id, t.updated_at desc nulls last, t.created_at desc nulls last
+    ),
+    raw_users as (
+      select
+        u.id,
+        u.name,
+        u.email,
+        u.role,
+        coalesce(u.banned, false) as banned,
+        u.created_at,
+        u.updated_at,
+        up.birth_at,
+        up.gender,
+        cs.thread_count,
+        cs.last_active_at,
+        fum.first_user_message_at,
+        ps.first_paid_at,
+        rs.second_paid_at,
+        lt.latest_conversation_id,
+        coalesce(lg.status, 'inactive') as membership_status,
+        coalesce(lg.tier, 0) as membership_tier,
+        lg.period_end as membership_period_end,
+        case
+          when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
+          else 0
+        end as remaining_ai_chat_count,
+        case
+          when nullif(trim(u.name), '') is not null then trim(u.name)
+          when nullif(trim(u.email), '') is not null and strpos(u.email, '@') > 1 then split_part(u.email, '@', 1)
+          when u.id is not null then right(u.id::text, 8)
+          else ''
+        end as nickname,
+        case
+          when nullif(trim(u.email), '') is not null and strpos(u.email, '@') > 1 then split_part(u.email, '@', 1)
+          when u.id is not null then right(u.id::text, 8)
+          else ''
+        end as username
+      from "user" u
+      left join user_profile up on up.user_id = u.id
+      left join latest_grant lg on lg.user_id = u.id
+      left join chat_stats cs on cs.user_id = u.id
+      left join first_user_message fum on fum.user_id = u.id
+      left join paid_stats ps on ps.email_key = lower(trim(u.email))
+      left join renew_stats rs on rs.email_key = lower(trim(u.email))
+      left join latest_thread lt on lt.user_id = u.id
+    ),
+    filtered as (
+      select
+        r.*,
+        case r.membership_tier
+          when 1 then '微光版'
+          when 2 then '烛照版'
+          when 3 then '洞见版'
+          else '免费版'
+        end as subscription_status,
+        case
+          when r.membership_tier > 0 then
+            case
+              when r.membership_status <> 'active'
+                   or (r.membership_period_end is not null and r.membership_period_end < now())
+                then '已过期'
+              when r.remaining_ai_chat_count <= 0 then '已用完'
+              else '未过期'
+            end
+          else
+            case
+              when r.remaining_ai_chat_count <= 0 then '已用完'
+              else '未用完'
+            end
+        end as subscription_expired
+      from raw_users r
     )
-    select
-      u.id,
-      u.name,
-      u.email,
-      u.role,
-      coalesce(u.banned, false) as banned,
-      u.created_at,
-      u.updated_at,
-      up.birth_at,
-      up.gender,
-      cs.thread_count,
-      cs.last_active_at,
-      fum.first_user_message_at,
-      ps.first_paid_at,
-      rs.second_paid_at,
-      lt.latest_conversation_id,
-      coalesce(lg.status, 'inactive') as membership_status,
-      coalesce(lg.tier, 0) as membership_tier,
-      lg.period_end as membership_period_end,
-      case
-        when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
-        else 0
-      end as remaining_ai_chat_count
-    from "user" u
-    ${boundsJoin}
-    left join user_profile up on up.user_id = u.id
-    left join latest_grant lg on lg.user_id = u.id
-    left join chat_stats cs on cs.user_id = u.id
-    left join first_user_message fum on fum.user_id = u.id
-    left join paid_stats ps on ps.email_key = lower(trim(u.email))
-    left join renew_stats rs on rs.email_key = lower(trim(u.email))
-    left join latest_thread lt on lt.user_id = u.id
-    ${whereClause}
-    order by u.created_at desc
-    limit 5000;
   `;
-  const result = await pool.query(sql, queryParams);
+
+  const rowsSql = `
+    ${baseSql}
+    select
+      f.id,
+      f.name,
+      f.email,
+      f.role,
+      f.banned,
+      f.created_at,
+      f.updated_at,
+      f.birth_at,
+      f.gender,
+      f.thread_count,
+      f.last_active_at,
+      f.first_user_message_at,
+      f.first_paid_at,
+      f.second_paid_at,
+      f.latest_conversation_id,
+      f.membership_status,
+      f.membership_tier,
+      f.membership_period_end,
+      f.remaining_ai_chat_count,
+      f.nickname,
+      f.username,
+      f.subscription_status,
+      f.subscription_expired
+    from filtered f
+    ${whereClause}
+    order by f.created_at desc
+    limit $${queryParams.length + 1}
+    offset $${queryParams.length + 2};
+  `;
+
+  const countSql = `
+    ${baseSql}
+    select count(*)::int as total
+    from filtered f
+    ${whereClause};
+  `;
+
+  const rowsParams = [...queryParams, pageSize, offset];
+  const [rowsResult, countResult] = await Promise.all([
+    pool.query(rowsSql, rowsParams),
+    pool.query(countSql, queryParams),
+  ]);
 
   const toNameParts = (name, email, userId) => {
     const fallback = email && email.includes('@') ? email.split('@')[0] : `user_${(userId || '').slice(-6)}`;
@@ -1604,11 +1738,11 @@ async function queryUsers(params = {}) {
   const now = Date.now();
   const activeThreshold = now - 7 * 24 * 60 * 60 * 1000;
 
-  const rows = result.rows.map((r) => {
+  const rows = rowsResult.rows.map((r) => {
     const { firstName, lastName } = toNameParts(r.name, r.email, r.id);
     const email = r.email || '';
-    const username = email && email.includes('@') ? email.split('@')[0] : (r.id || '').slice(-8);
-    const nickname = (r.name || '').trim() || username;
+    const username = String(r.username || (email && email.includes('@') ? email.split('@')[0] : (r.id || '').slice(-8)));
+    const nickname = String(r.nickname || username);
     const lastActiveAt = r.last_active_at || r.updated_at || r.created_at;
     const status = r.banned
       ? 'suspended'
@@ -1619,24 +1753,9 @@ async function queryUsers(params = {}) {
     const membershipTier = Number(r.membership_tier || 0);
     const levelLabel = membershipLevel(membershipTier);
     const membershipStatus = r.membership_status || 'inactive';
-    const periodEndTs = r.membership_period_end ? new Date(r.membership_period_end).getTime() : NaN;
     const remainingAiChatCount = Number(r.remaining_ai_chat_count || 0);
-    const expiredByStatusOrTime =
-      membershipStatus !== 'active' ||
-      (!Number.isNaN(periodEndTs) && periodEndTs < now);
-
-    let subscriptionExpired = '';
-    if (membershipTier > 0) {
-      if (expiredByStatusOrTime) {
-        subscriptionExpired = '已过期';
-      } else if (remainingAiChatCount <= 0) {
-        subscriptionExpired = '已用完';
-      } else {
-        subscriptionExpired = '未过期';
-      }
-    } else {
-      subscriptionExpired = remainingAiChatCount <= 0 ? '已用完' : '未用完';
-    }
+    const subscriptionExpired = String(r.subscription_expired || '');
+    const subscriptionStatus = String(r.subscription_status || levelLabel);
 
     return {
       id: r.id,
@@ -1654,7 +1773,7 @@ async function queryUsers(params = {}) {
       userAge: toAge(r.birth_at),
       membershipLevel: levelLabel,
       isSubscribed: isSubscribed(membershipStatus, membershipTier),
-      subscriptionStatus: levelLabel,
+      subscriptionStatus,
       subscriptionExpired,
       latestConversationId: r.latest_conversation_id || null,
       totalChatCount: Number(r.thread_count || 0),
@@ -1666,30 +1785,9 @@ async function queryUsers(params = {}) {
     };
   });
 
-  let filtered = rows;
-
-  if (nicknameKeyword) {
-    filtered = filtered.filter((row) => {
-      const nickname = String(row.nickname || "").toLowerCase();
-      const username = String(row.username || "").toLowerCase();
-      const email = String(row.email || "").toLowerCase();
-      return nickname.includes(nicknameKeyword) || username.includes(nicknameKeyword) || email.includes(nicknameKeyword);
-    });
-  }
-
-  if (subscriptionStatusFilter.length > 0) {
-    const allow = new Set(subscriptionStatusFilter);
-    filtered = filtered.filter((row) => allow.has(String(row.subscriptionStatus || "免费版")));
-  }
-
-  if (subscriptionExpiredFilter.length > 0) {
-    const allow = new Set(subscriptionExpiredFilter);
-    filtered = filtered.filter((row) => allow.has(String(row.subscriptionExpired || "")));
-  }
-
   return {
-    total: filtered.length,
-    rows: filtered.slice(offset, offset + pageSize),
+    total: Number(countResult.rows[0]?.total || 0),
+    rows,
     page,
     pageSize,
     filters: {
