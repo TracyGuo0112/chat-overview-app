@@ -388,8 +388,10 @@ function roleBadgeClass(role: string) {
 
 export function ConversationDetailPage({
   conversationId,
+  customerIdFilter,
 }: {
   conversationId: string
+  customerIdFilter?: string
 }) {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -483,7 +485,18 @@ export function ConversationDetailPage({
       <Main>
         <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
           <div className='flex items-center gap-2'>
-            <Button variant='outline' onClick={() => navigate({ to: '/' })}>
+            <Button
+              variant='outline'
+              onClick={() =>
+                navigate({
+                  to: '/',
+                  search: () =>
+                    customerIdFilter
+                      ? { customerId: customerIdFilter }
+                      : { customerId: undefined },
+                })
+              }
+            >
               <ArrowLeft className='mr-1 h-4 w-4' /> 返回总览
             </Button>
             <h1 className='text-2xl font-bold tracking-tight'>会话详情</h1>

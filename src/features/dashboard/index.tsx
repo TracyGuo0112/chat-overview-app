@@ -541,6 +541,10 @@ export function Dashboard() {
                           navigate({
                             to: '/conversations/$conversationId',
                             params: { conversationId: row.conversationId },
+                            search: () =>
+                              customerIdFilter
+                                ? { customerId: customerIdFilter }
+                                : { customerId: undefined },
                           })
                         }
                       >
