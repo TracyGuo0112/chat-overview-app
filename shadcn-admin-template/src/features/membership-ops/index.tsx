@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import {
@@ -152,6 +152,9 @@ export function MembershipOps() {
   const [draftEndDate, setDraftEndDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const appliedRangeRef = useRef<{ startDate: string; endDate: string } | null>(
+    null
+  )
 
   const loadData = useCallback(
     async (nextRange?: { startDate: string; endDate: string }) => {
@@ -159,8 +162,10 @@ export function MembershipOps() {
       setError('')
 
       try {
-        const startDate = nextRange?.startDate ?? draftStartDate
-        const endDate = nextRange?.endDate ?? draftEndDate
+        const startDate =
+          nextRange?.startDate ?? appliedRangeRef.current?.startDate ?? ''
+        const endDate =
+          nextRange?.endDate ?? appliedRangeRef.current?.endDate ?? ''
         const qs = new URLSearchParams()
         if (startDate && endDate) {
           qs.set('startDate', startDate)
@@ -194,18 +199,22 @@ export function MembershipOps() {
         setData(payload)
         setDraftStartDate(payload.range.startDate)
         setDraftEndDate(payload.range.endDate)
+        appliedRangeRef.current = {
+          startDate: payload.range.startDate,
+          endDate: payload.range.endDate,
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : '会员运营分析加载失败')
       } finally {
         setLoading(false)
       }
     },
-    [draftEndDate, draftStartDate]
+    []
   )
 
   useEffect(() => {
     void loadData()
-  }, [loadData])
+  }, [])
 
   const funnelData = useMemo(() => {
     if (!data) return []
@@ -494,8 +503,8 @@ export function MembershipOps() {
             <CardHeader>
               <CardTitle>转化漏斗</CardTitle>
               <CardDescription>
-                游客 → 注册 → 首次对话 → 订阅 →
-                初次续费（同邮箱去重，按第2次付费时间计入）。
+                游客 → 注册 → 首次对话 → 订阅 → 初次续费（同邮箱去重；
+                首次对话按同注册区间 cohort 截至区间结束统计）。
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -567,7 +576,7 @@ export function MembershipOps() {
           <CardHeader>
             <CardTitle>转化趋势（按天）</CardTitle>
             <CardDescription>
-              展示活跃用户、注册、订阅、续费人数的每日趋势。
+              展示活跃用户（与主页“今日对话用户数”同口径）、注册、订阅、续费人数的每日趋势。
             </CardDescription>
           </CardHeader>
           <CardContent>

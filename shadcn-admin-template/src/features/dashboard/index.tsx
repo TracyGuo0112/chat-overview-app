@@ -41,6 +41,7 @@ type DateRangeValue = 'all' | '1d' | '7d' | '30d'
 type RemainingValue = 'all' | '0-10' | '10+'
 
 interface OverviewKpis {
+  todayRegisteredUsers: number
   totalRegisteredUsers: number
   todayActiveUsers: number
   currentOnlineUsers: number
@@ -79,6 +80,7 @@ interface OverviewPayload {
 }
 
 const defaultKpis: OverviewKpis = {
+  todayRegisteredUsers: 0,
   totalRegisteredUsers: 0,
   todayActiveUsers: 0,
   currentOnlineUsers: 0,
@@ -313,15 +315,15 @@ export function Dashboard() {
         <div className='mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'>
           <Card>
             <CardHeader className='pb-2'>
-              <CardDescription>当前注册总人数</CardDescription>
+              <CardDescription>今日注册用户数</CardDescription>
               <CardTitle className='text-2xl'>
-                {Number(kpis.totalRegisteredUsers ?? 0).toLocaleString()}
+                {Number(kpis.todayRegisteredUsers ?? 0).toLocaleString()}
               </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className='pb-2'>
-              <CardDescription>今日活跃用户数</CardDescription>
+              <CardDescription>今日对话用户数</CardDescription>
               <CardTitle className='text-2xl'>
                 {Number(kpis.todayActiveUsers ?? 0).toLocaleString()}
               </CardTitle>

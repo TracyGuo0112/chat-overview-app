@@ -7,6 +7,7 @@ const { Pool } = require("pg");
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 4173);
+const FRONTEND_DIST_DIR = path.join(__dirname, "shadcn-admin-template", "dist");
 const ANALYTICS_TIMEZONE = "Asia/Shanghai";
 const ONLINE_WINDOW_MINUTES = Number.isFinite(Number(process.env.ONLINE_WINDOW_MINUTES))
   ? Math.max(1, Math.floor(Number(process.env.ONLINE_WINDOW_MINUTES)))
@@ -43,6 +44,72 @@ function sendFile(res, filePath, contentType) {
     res.writeHead(200, { "Content-Type": contentType });
     res.end(data);
   });
+}
+
+const CONTENT_TYPES = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+function getContentType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return CONTENT_TYPES[ext] || "application/octet-stream";
+}
+
+function resolveDistFilePath(requestPath) {
+  let decodedPath = "/";
+  try {
+    decodedPath = decodeURIComponent(requestPath || "/");
+  } catch (_) {
+    return null;
+  }
+  const relativePath = decodedPath.replace(/^\/+/, "");
+  const resolvedPath = path.resolve(FRONTEND_DIST_DIR, relativePath);
+  const isInsideDist =
+    resolvedPath === FRONTEND_DIST_DIR || resolvedPath.startsWith(FRONTEND_DIST_DIR + path.sep);
+  if (!isInsideDist) return null;
+  return resolvedPath;
+}
+
+function tryServeFrontendDist(reqPath, res) {
+  const indexFile = path.join(FRONTEND_DIST_DIR, "index.html");
+  if (!fs.existsSync(indexFile)) return false;
+
+  const normalizedPath = reqPath || "/";
+  if (normalizedPath === "/") {
+    sendFile(res, indexFile, "text/html; charset=utf-8");
+    return true;
+  }
+
+  const assetFilePath = resolveDistFilePath(normalizedPath);
+  if (!assetFilePath) {
+    res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Bad Request");
+    return true;
+  }
+
+  if (fs.existsSync(assetFilePath) && fs.statSync(assetFilePath).isFile()) {
+    sendFile(res, assetFilePath, getContentType(assetFilePath));
+    return true;
+  }
+
+  // SPA history fallback.
+  sendFile(res, indexFile, "text/html; charset=utf-8");
+  return true;
 }
 
 function normalizeParts(parts) {
@@ -644,6 +711,44 @@ async function queryMembershipOps(params) {
         (($1::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}') as start_ts,
         ((($2::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}') as end_ts
     ),
+    user_email as (
+      select
+        u.id as user_id,
+        lower(trim(u.email)) as email_key,
+        u.created_at
+      from "user" u
+      where nullif(trim(u.email), '') is not null
+    ),
+    email_registration as (
+      select
+        ue.email_key,
+        min(ue.created_at) as registered_at
+      from user_email ue
+      group by ue.email_key
+    ),
+    first_conversation_stats as (
+      select
+        ue.email_key,
+        min(m.created_at) as first_user_message_at
+      from user_email ue
+      join chat_thread t on t.user_id = ue.user_id
+      join chat_message m on m.thread_id = t.id
+      join email_registration er on er.email_key = ue.email_key
+      where m.role = 'user'
+        and m.created_at >= er.registered_at
+      group by ue.email_key
+    ),
+    registered_cohort as (
+      select
+        er.email_key,
+        er.registered_at,
+        fcs.first_user_message_at
+      from email_registration er
+      left join first_conversation_stats fcs on fcs.email_key = er.email_key
+      cross join bounds b
+      where er.registered_at >= b.start_ts
+        and er.registered_at < b.end_ts
+    ),
     paid_stats as (
       select
         lower(trim(u.email)) as email_key,
@@ -683,18 +788,15 @@ async function queryMembershipOps(params) {
     select
       (
         select count(*)::int
-        from "user" u
-        cross join bounds b
-        where u.created_at >= b.start_ts and u.created_at < b.end_ts
+        from registered_cohort rc
       ) as registered_users,
       (
-        select count(distinct t.user_id)::int
-        from chat_message m
-        join chat_thread t on t.id = m.thread_id
+        select count(*)::int
+        from registered_cohort rc
         cross join bounds b
-        where m.role = 'user'
-          and m.created_at >= b.start_ts
-          and m.created_at < b.end_ts
+        where rc.first_user_message_at is not null
+          and rc.first_user_message_at >= rc.registered_at
+          and rc.first_user_message_at < b.end_ts
       ) as active_users,
       (
         select count(*)::int
@@ -860,6 +962,44 @@ async function queryMembershipOps(params) {
     days as (
       select generate_series((select start_date from bounds), (select end_date from bounds), interval '1 day')::date as day
     ),
+    user_email as (
+      select
+        u.id as user_id,
+        lower(trim(u.email)) as email_key,
+        u.created_at
+      from "user" u
+      where nullif(trim(u.email), '') is not null
+    ),
+    email_registration as (
+      select
+        ue.email_key,
+        min(ue.created_at) as registered_at
+      from user_email ue
+      group by ue.email_key
+    ),
+    first_conversation_stats as (
+      select
+        ue.email_key,
+        min(m.created_at) as first_user_message_at
+      from user_email ue
+      join chat_thread t on t.user_id = ue.user_id
+      join chat_message m on m.thread_id = t.id
+      join email_registration er on er.email_key = ue.email_key
+      where m.role = 'user'
+        and m.created_at >= er.registered_at
+      group by ue.email_key
+    ),
+    registered_cohort as (
+      select
+        er.email_key,
+        er.registered_at,
+        fcs.first_user_message_at
+      from email_registration er
+      left join first_conversation_stats fcs on fcs.email_key = er.email_key
+      cross join bounds b
+      where er.registered_at >= b.start_ts
+        and er.registered_at < b.end_ts
+    ),
     paid_stats as (
       select
         lower(trim(u.email)) as email_key,
@@ -898,11 +1038,9 @@ async function queryMembershipOps(params) {
     ),
     register_daily as (
       select
-        (u.created_at at time zone '${ANALYTICS_TIMEZONE}')::date as day,
+        (rc.registered_at at time zone '${ANALYTICS_TIMEZONE}')::date as day,
         count(*)::int as value
-      from "user" u
-      cross join bounds b
-      where u.created_at >= b.start_ts and u.created_at < b.end_ts
+      from registered_cohort rc
       group by 1
     ),
     subscribe_daily as (
@@ -1249,7 +1387,14 @@ async function queryOverview(params) {
         where m2.role = 'user'
           and m2.created_at >= b.start_ts
           and m2.created_at < b.end_ts
-      ) as today_active_users
+      ) as today_active_users,
+      (
+        select count(*)::int
+        from "user" u2
+        cross join bounds b
+        where u2.created_at >= b.start_ts
+          and u2.created_at < b.end_ts
+      ) as today_registered_users
     from today_threads tt
     left join first_user_message fum on fum.thread_id = tt.id
     left join first_assistant_message fam on fam.thread_id = tt.id;
@@ -1327,6 +1472,7 @@ async function queryOverview(params) {
   const lowRemainingUsers = Number(lowRemainingResult.rows[0]?.total || 0);
   const currentOnlineUsers = Number(onlineResult.rows[0]?.total || 0);
   const kpiRow = kpiResult.rows[0] || {};
+  const todayRegisteredUsers = Number(kpiRow.today_registered_users || 0);
   const todayActiveUsers = Number(kpiRow.today_active_users || 0);
   const todayConversations = Number(kpiRow.today_conversations || 0);
   const avgFirstReply = Number(kpiRow.avg_first_reply_minutes || 0);
@@ -1335,11 +1481,12 @@ async function queryOverview(params) {
   return {
     definitions: {
       timezone: ANALYTICS_TIMEZONE,
-      todayActiveUsers: "当日有 user 角色消息的去重用户数",
+      todayActiveUsers: "当日有 user 角色消息的去重对话用户数",
       currentOnlineUsers: `${ONLINE_WINDOW_MINUTES} 分钟内有会话活跃（chat_thread.updated_at）的去重用户数`,
       lowRemainingUsers: `${LOW_REMAINING_WINDOW_HOURS} 小时内活跃且剩余次数 0-3 的去重用户数`,
     },
     kpis: {
+      todayRegisteredUsers,
       totalRegisteredUsers,
       todayActiveUsers,
       currentOnlineUsers,
@@ -1445,20 +1592,37 @@ async function queryUsers(params = {}) {
   if (funnelSegment) {
     const startSlot = addParam(startDate);
     const endSlot = addParam(endDate);
-    const rangeFilterField =
-      funnelSegment === "registered"
-        ? "f.created_at"
-        : funnelSegment === "firstConversation"
-          ? "f.first_user_message_at"
-          : funnelSegment === "subscribed"
-            ? "f.first_paid_at"
-            : "f.second_paid_at";
+    const startBound = `((${startSlot}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`;
+    const endBound = `(((${endSlot}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`;
 
-    whereConditions.push(
-      `${rangeFilterField} is not null`,
-      `${rangeFilterField} >= ((${startSlot}::date)::timestamp at time zone '${ANALYTICS_TIMEZONE}')`,
-      `${rangeFilterField} < (((${endSlot}::date + interval '1 day')::timestamp) at time zone '${ANALYTICS_TIMEZONE}')`
-    );
+    if (funnelSegment === "registered") {
+      whereConditions.push(
+        "f.email_rank = 1",
+        "nullif(trim(f.email), '') is not null",
+        `f.created_at >= ${startBound}`,
+        `f.created_at < ${endBound}`
+      );
+    } else if (funnelSegment === "firstConversation") {
+      // Same registration cohort: registered in range, and converted to first conversation by range end.
+      whereConditions.push(
+        "f.email_rank = 1",
+        "nullif(trim(f.email), '') is not null",
+        `f.created_at >= ${startBound}`,
+        `f.created_at < ${endBound}`,
+        "f.first_user_message_at is not null",
+        "f.first_user_message_at >= f.created_at",
+        `f.first_user_message_at < ${endBound}`
+      );
+    } else {
+      const rangeFilterField = funnelSegment === "subscribed" ? "f.first_paid_at" : "f.second_paid_at";
+      whereConditions.push(
+        "f.email_rank = 1",
+        "nullif(trim(f.email), '') is not null",
+        `${rangeFilterField} is not null`,
+        `${rangeFilterField} >= ${startBound}`,
+        `${rangeFilterField} < ${endBound}`
+      );
+    }
   }
 
   if (registerStartDate) {
@@ -1509,14 +1673,32 @@ async function queryUsers(params = {}) {
         g.period_end desc nulls last,
         g.period_start desc nulls last
     ),
+    user_email as (
+      select
+        u.id as user_id,
+        lower(trim(u.email)) as email_key,
+        u.created_at
+      from "user" u
+      where nullif(trim(u.email), '') is not null
+    ),
+    email_registration as (
+      select
+        ue.email_key,
+        min(ue.created_at) as registered_at
+      from user_email ue
+      group by ue.email_key
+    ),
     first_user_message as (
       select
-        t.user_id,
+        ue.email_key,
         min(m.created_at) as first_user_message_at
-      from chat_message m
-      join chat_thread t on t.id = m.thread_id
+      from user_email ue
+      join chat_thread t on t.user_id = ue.user_id
+      join chat_message m on m.thread_id = t.id
+      join email_registration er on er.email_key = ue.email_key
       where m.role = 'user'
-      group by t.user_id
+        and m.created_at >= er.registered_at
+      group by ue.email_key
     ),
     paid_stats as (
       select
@@ -1603,12 +1785,16 @@ async function queryUsers(params = {}) {
           when nullif(trim(u.email), '') is not null and strpos(u.email, '@') > 1 then split_part(u.email, '@', 1)
           when u.id is not null then right(u.id::text, 8)
           else ''
-        end as username
+        end as username,
+        row_number() over (
+          partition by coalesce(nullif(lower(trim(u.email)), ''), concat('user:', u.id::text))
+          order by u.created_at asc, u.id asc
+        ) as email_rank
       from "user" u
       left join user_profile up on up.user_id = u.id
       left join latest_grant lg on lg.user_id = u.id
       left join chat_stats cs on cs.user_id = u.id
-      left join first_user_message fum on fum.user_id = u.id
+      left join first_user_message fum on fum.email_key = lower(trim(u.email))
       left join paid_stats ps on ps.email_key = lower(trim(u.email))
       left join renew_stats rs on rs.email_key = lower(trim(u.email))
       left join latest_thread lt on lt.user_id = u.id
@@ -1976,7 +2162,16 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (parsedUrl.pathname === "/" || parsedUrl.pathname === "/chat-overview-preview.html") {
+  if (parsedUrl.pathname === "/chat-overview-preview.html") {
+    sendFile(res, path.join(__dirname, "chat-overview-preview.html"), "text/html; charset=utf-8");
+    return;
+  }
+
+  if (tryServeFrontendDist(parsedUrl.pathname, res)) {
+    return;
+  }
+
+  if (parsedUrl.pathname === "/") {
     sendFile(res, path.join(__dirname, "chat-overview-preview.html"), "text/html; charset=utf-8");
     return;
   }
