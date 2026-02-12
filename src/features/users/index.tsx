@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { getRouteApi } from '@tanstack/react-router'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
+import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
@@ -17,37 +19,17 @@ const route = getRouteApi('/_authenticated/users/')
 type UsersApiPayload = {
   total: number
   rows: User[]
-}
-
-const shanghaiDayFormatter = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Asia/Shanghai',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
-function toShanghaiDate(value: unknown) {
-  const date = value instanceof Date ? value : new Date(String(value || ''))
-  if (Number.isNaN(date.getTime())) return null
-  return shanghaiDayFormatter.format(date)
-}
-
-function inDateRange(
-  value: unknown,
-  startDate: string | undefined,
-  endDate: string | undefined
-) {
-  const day = toShanghaiDate(value)
-  if (!day) return false
-  if (startDate && day < startDate) return false
-  if (endDate && day > endDate) return false
-  return true
+  filters?: {
+    funnelSegment?: 'registered' | 'firstConversation' | 'subscribed' | 'renewed'
+    startDate?: string
+    endDate?: string
+  }
 }
 
 export function Users() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const [rawUsers, setRawUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -58,37 +40,18 @@ export function Users() {
     renewed: '初次续费用户',
   } as const
 
-  const users = useMemo(() => {
-    const segment = search.funnelSegment as
-      | 'registered'
-      | 'firstConversation'
-      | 'subscribed'
-      | 'renewed'
-      | undefined
-    const startDate = search.startDate || ''
-    const endDate = search.endDate || ''
-    if (!segment) return rawUsers
-
-    return rawUsers.filter((user) => {
-      if (segment === 'registered') {
-        return inDateRange(user.createdAt, startDate, endDate)
-      }
-      if (segment === 'firstConversation') {
-        return inDateRange(user.firstConversationAt, startDate, endDate)
-      }
-      if (segment === 'subscribed') {
-        return inDateRange(user.firstPaidAt, startDate, endDate)
-      }
-      return inDateRange(user.secondPaidAt, startDate, endDate)
-    })
-  }, [rawUsers, search.endDate, search.funnelSegment, search.startDate])
-
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true)
       setError('')
       try {
-        const resp = await fetch('/api/users')
+        const qs = new URLSearchParams()
+        if (search.funnelSegment) qs.set('funnelSegment', search.funnelSegment)
+        if (search.startDate) qs.set('startDate', search.startDate)
+        if (search.endDate) qs.set('endDate', search.endDate)
+
+        const url = qs.toString() ? `/api/users?${qs.toString()}` : '/api/users'
+        const resp = await fetch(url)
         const payload = (await resp.json()) as UsersApiPayload
         if (!resp.ok) {
           throw new Error(
@@ -96,17 +59,17 @@ export function Users() {
               `请求失败（HTTP ${resp.status}）`
           )
         }
-        setRawUsers(Array.isArray(payload?.rows) ? payload.rows : [])
+        setUsers(Array.isArray(payload?.rows) ? payload.rows : [])
       } catch (err) {
         setError(err instanceof Error ? err.message : '用户数据加载失败')
-        setRawUsers([])
+        setUsers([])
       } finally {
         setLoading(false)
       }
     }
 
     void loadUsers()
-  }, [])
+  }, [search.endDate, search.funnelSegment, search.startDate])
 
   return (
     <UsersProvider>
@@ -133,7 +96,24 @@ export function Users() {
               </p>
             ) : null}
           </div>
-          <UsersPrimaryButtons />
+          <div className='flex items-center gap-2'>
+            {search.source === 'membershipOps' ? (
+              <Button
+                variant='outline'
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    window.history.back()
+                    return
+                  }
+                  void navigate({ to: '/membership-ops' })
+                }}
+              >
+                <ArrowLeft className='mr-1 h-4 w-4' />
+                返回上一级
+              </Button>
+            ) : null}
+            <UsersPrimaryButtons />
+          </div>
         </div>
 
         {error ? <p className='text-sm text-red-600'>{error}</p> : null}

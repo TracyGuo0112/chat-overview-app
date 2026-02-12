@@ -268,6 +268,9 @@ export function MembershipOps() {
           | '未过期'
           | '已过期'
         )[],
+        source: 'membershipOps' as const,
+        startDate: data?.range.startDate || '',
+        endDate: data?.range.endDate || '',
       }),
     })
   }
@@ -289,6 +292,7 @@ export function MembershipOps() {
           | '未过期'
           | '已过期'
         )[],
+        source: 'membershipOps' as const,
         funnelSegment: segment,
         startDate: data.range.startDate,
         endDate: data.range.endDate,
