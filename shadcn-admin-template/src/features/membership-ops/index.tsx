@@ -235,9 +235,9 @@ export function MembershipOps() {
         label: `首次对话 ${formatNumber(data.funnel.activeUsers)}`,
       },
       {
-        name: '订阅',
+        name: '首次订阅',
         value: data.funnel.subscribed,
-        label: `订阅 ${formatNumber(data.funnel.subscribed)}`,
+        label: `首次订阅 ${formatNumber(data.funnel.subscribed)}`,
       },
       {
         name: '续费',
@@ -326,7 +326,7 @@ export function MembershipOps() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>会员运营分析</h2>
             <p className='text-muted-foreground'>
-              转化漏斗（游客→注册→首次对话→订阅→续费）与会员分档对比（咨询频次、额度风险）。
+              转化漏斗（游客→注册→首次对话→首次订阅→续费）与会员分档对比（咨询频次、额度风险，仅统计已验证且未封禁账号）。
             </p>
           </div>
           <Button
@@ -457,7 +457,7 @@ export function MembershipOps() {
           </Card>
           <Card>
             <CardHeader className='pb-2'>
-              <CardDescription>订阅（转化率）</CardDescription>
+              <CardDescription>首次订阅（转化率）</CardDescription>
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.subscribed)}
               </CardTitle>
@@ -479,7 +479,7 @@ export function MembershipOps() {
           </Card>
           <Card>
             <CardHeader className='pb-2'>
-              <CardDescription>初次续费（转化率）</CardDescription>
+              <CardDescription>首次续费（转化率）</CardDescription>
               <CardTitle className='text-2xl'>
                 {formatNumber(data?.funnel.renewed)}
               </CardTitle>
@@ -503,7 +503,7 @@ export function MembershipOps() {
             <CardHeader>
               <CardTitle>转化漏斗</CardTitle>
               <CardDescription>
-                游客 → 注册 → 首次对话 → 订阅 → 初次续费（同邮箱去重；
+                游客 → 注册 → 首次对话 → 首次订阅 → 首次续费（同邮箱去重；
                 首次对话按同注册区间 cohort 截至区间结束统计）。
               </CardDescription>
             </CardHeader>
@@ -575,9 +575,9 @@ export function MembershipOps() {
         <Card>
           <CardHeader>
             <CardTitle>转化趋势（按天）</CardTitle>
-            <CardDescription>
-              展示活跃用户（与主页“今日对话用户数”同口径）、注册、订阅、续费人数的每日趋势。
-            </CardDescription>
+              <CardDescription>
+                展示活跃用户（与主页“今日对话用户数”同口径）、注册、首次订阅、续费人数的每日趋势。
+              </CardDescription>
           </CardHeader>
           <CardContent>
             <div className='h-[340px]'>
@@ -607,7 +607,7 @@ export function MembershipOps() {
                   <Line
                     type='monotone'
                     dataKey='subscribed'
-                    name='订阅'
+                    name='首次订阅'
                     stroke='#3b82f6'
                     strokeWidth={2}
                     dot={false}

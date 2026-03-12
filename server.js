@@ -15,6 +15,45 @@ const ONLINE_WINDOW_MINUTES = Number.isFinite(Number(process.env.ONLINE_WINDOW_M
 const LOW_REMAINING_WINDOW_HOURS = Number.isFinite(Number(process.env.LOW_REMAINING_WINDOW_HOURS))
   ? Math.max(1, Math.floor(Number(process.env.LOW_REMAINING_WINDOW_HOURS)))
   : 48;
+const MEMBERSHIP_OPS_EXCLUDED_EMAILS = [
+  "1485059943@qq.com",
+  "zhichengfan18@gmail.com",
+  "yanessagyh@gmail.com",
+  "1207173024@qq.com",
+].map((email) => String(email || "").trim().toLowerCase()).filter(Boolean);
+const MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY =
+  MEMBERSHIP_OPS_EXCLUDED_EMAILS.length > 0
+    ? `array[${MEMBERSHIP_OPS_EXCLUDED_EMAILS.map((email) => `'${email.replace(/'/g, "''")}'`).join(", ")}]::text[]`
+    : "array[]::text[]";
+function standardInitialSubscriptionSql(alias) {
+  return `(
+    (${alias}.tier_value = 1 and ${alias}.subscription_days = 7)
+    or (${alias}.tier_value = 2 and ${alias}.subscription_days = 30)
+    or (${alias}.tier_value = 3 and ${alias}.subscription_days = 30)
+  )`;
+}
+function creditSubscriptionSql(typeExpression, amountExpression) {
+  return `(
+    lower(coalesce(${typeExpression}, '')) = 'credits'
+    and coalesce(${amountExpression}, 0) in (10, 50, 600)
+  )`;
+}
+function relevantPaidCodeSql(alias) {
+  return `(
+    (
+      (${alias}.tier = 1 and coalesce(${alias}.subscription_days, 0) = 7)
+      or (${alias}.tier = 2 and coalesce(${alias}.subscription_days, 0) = 30)
+      or (${alias}.tier = 3 and coalesce(${alias}.subscription_days, 0) = 30)
+    )
+    or ${creditSubscriptionSql(`${alias}.type`, `${alias}.credit_amount`)}
+  )`;
+}
+function eligibleFirstPaidEntrySql(alias) {
+  return `(
+    ${standardInitialSubscriptionSql(alias)}
+    or ${creditSubscriptionSql(`${alias}.code_type`, `${alias}.credit_amount`)}
+  )`;
+}
 
 const pool = new Pool({
   host: process.env.PGHOST,
@@ -275,7 +314,9 @@ async function runDbChatQuery(question) {
 - 会员等级分布
 - 剩余次数为 0 的用户有多少？
 - 最近 10 条会话列表
-- 最近 10 个注册用户`; 
+- 最近 10 个注册用户
+
+注：统计口径为「已验证邮箱且未封禁账号」。`; 
 
   if (has(["帮助", "能查", "示例", "例子", "help"])) {
     return { answer: helpText };
@@ -322,14 +363,20 @@ async function runDbChatQuery(question) {
       select count(*)::int as 今日新增注册人数
       from "user" u
       cross join bounds b
-      where u.created_at >= b.start_ts and u.created_at < b.end_ts;`,
+      where u.created_at >= b.start_ts
+        and u.created_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;`,
       "今日新增注册人数："
     );
   }
 
   if (has(["注册", "用户"]) && has(["总", "人数", "多少"])) {
     return runScalar(
-      `select count(*)::int as 注册总人数 from "user";`,
+      `select count(*)::int as 注册总人数
+      from "user" u
+      where coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;`,
       "注册总人数："
     );
   }
@@ -340,10 +387,13 @@ async function runDbChatQuery(question) {
       select count(distinct t.user_id)::int as 今日活跃用户数
       from chat_message m
       join chat_thread t on t.id = m.thread_id
+      left join "user" u on u.id = t.user_id
       cross join bounds b
       where m.role = 'user'
         and m.created_at >= b.start_ts
-        and m.created_at < b.end_ts;`,
+        and m.created_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;`,
       "今日活跃用户数："
     );
   }
@@ -352,7 +402,10 @@ async function runDbChatQuery(question) {
     return runScalar(
       `select count(distinct t.user_id)::int as 当前在线人数
       from chat_thread t
-      where t.updated_at >= now() - interval '${ONLINE_WINDOW_MINUTES} minutes';`,
+      join "user" u on u.id = t.user_id
+      where t.updated_at >= now() - interval '${ONLINE_WINDOW_MINUTES} minutes'
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;`,
       `当前在线人数（${ONLINE_WINDOW_MINUTES}分钟内活跃）：`
     );
   }
@@ -361,10 +414,13 @@ async function runDbChatQuery(question) {
     const sql = `${latestGrantCte}
       select count(*)::int as 当前订阅人数
       from latest_grant lg
+      join "user" u on u.id = lg.user_id
       where lg.tier > 0
         and lg.status = 'active'
         and (lg.period_start is null or lg.period_start <= now())
-        and (lg.period_end is null or lg.period_end >= now());`;
+        and (lg.period_end is null or lg.period_end >= now())
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;`;
     return runScalar(sql, "当前订阅人数：");
   }
 
@@ -381,6 +437,8 @@ async function runDbChatQuery(question) {
         count(*)::int as 用户数
       from "user" u
       left join latest_grant lg on lg.user_id = u.id
+      where coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
       group by 1
       order by 2 desc;`;
     const result = await pool.query(sql);
@@ -398,7 +456,9 @@ async function runDbChatQuery(question) {
       where case
         when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
         else 0
-      end <= 0;
+      end <= 0
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;
     `;
     return runScalar(sql, "剩余次数为 0 的用户数：");
   }
@@ -411,7 +471,9 @@ async function runDbChatQuery(question) {
       where case
         when (up.credits ->> 'chat') ~ '^[0-9]+$' then (up.credits ->> 'chat')::int
         else 0
-      end between 0 and 3;
+      end between 0 and 3
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false;
     `;
     return runScalar(sql, "低剩余额度用户数（0-3）：");
   }
@@ -427,6 +489,8 @@ async function runDbChatQuery(question) {
         t.updated_at as 最后活跃时间
       from chat_thread t
       left join "user" u on u.id = t.user_id
+      where coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
       order by t.updated_at desc nulls last
       limit $1;
     `;
@@ -459,6 +523,8 @@ async function runDbChatQuery(question) {
       from "user" u
       left join user_profile up on up.user_id = u.id
       left join latest_grant lg on lg.user_id = u.id
+      where coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
       order by u.created_at desc
       limit $1;`;
     const result = await pool.query(sql, [limit]);
@@ -718,6 +784,9 @@ async function queryMembershipOps(params) {
         u.created_at
       from "user" u
       where nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and lower(trim(u.email)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
     ),
     email_registration as (
       select
@@ -749,41 +818,77 @@ async function queryMembershipOps(params) {
       where er.registered_at >= b.start_ts
         and er.registered_at < b.end_ts
     ),
-    paid_stats as (
+    paid_events_raw as (
       select
         lower(trim(u.email)) as email_key,
-        min(coalesce(g.period_start, g.period_end)) filter (where coalesce(g.tier, 0) > 0) as first_paid_at
-      from redemption_grant g
-      join "user" u on u.id = g.user_id
-      where nullif(trim(u.email), '') is not null
-      group by lower(trim(u.email))
-    ),
-    renew_events as (
-      select distinct
-        lower(trim(u.email)) as email_key,
-        rh.redeemed_at
+        rh.id as event_id,
+        rh.redeemed_at as paid_at,
+        coalesce(rc.tier, 0) as tier_value,
+        coalesce(rc.subscription_days, 0) as subscription_days,
+        coalesce(rc.type, '') as code_type,
+        coalesce(rc.credit_amount, 0) as credit_amount
       from redemption_history rh
       join "user" u on u.id = rh.user_id
       left join redemption_code rc on rc.id = rh.code_id
-      where coalesce(rc.tier, 0) > 0
+      where ${relevantPaidCodeSql("rc")}
         and nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and lower(trim(u.email)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
+        and rh.redeemed_at is not null
     ),
-    renew_ranked as (
+    first_paid_ranked as (
       select
-        re.email_key,
-        re.redeemed_at,
+        per.email_key,
+        per.tier_value,
+        per.subscription_days,
+        per.code_type,
+        per.credit_amount,
         row_number() over (
-          partition by re.email_key
-          order by re.redeemed_at asc
+          partition by per.email_key
+          order by per.paid_at asc, per.event_id asc
         ) as rn
-      from renew_events re
+      from paid_events_raw per
+    ),
+    eligible_paid_emails as (
+      select
+        fpr.email_key
+      from first_paid_ranked fpr
+      where fpr.rn = 1
+        and ${eligibleFirstPaidEntrySql("fpr")}
+    ),
+    paid_events as (
+      select
+        per.email_key,
+        per.event_id,
+        per.paid_at
+      from paid_events_raw per
+      join eligible_paid_emails epe on epe.email_key = per.email_key
+    ),
+    paid_ranked as (
+      select
+        pe.email_key,
+        pe.event_id,
+        pe.paid_at,
+        row_number() over (
+          partition by pe.email_key
+          order by pe.paid_at asc, pe.event_id asc
+        ) as rn
+      from paid_events pe
+    ),
+    paid_stats as (
+      select
+        email_key,
+        min(paid_at) filter (where rn = 1) as first_paid_at,
+        min(paid_at) filter (where rn = 2) as second_paid_at
+      from paid_ranked
+      group by email_key
     ),
     renew_stats as (
       select
-        email_key,
-        min(redeemed_at) filter (where rn = 2) as second_paid_at
-      from renew_ranked
-      group by email_key
+        ps.email_key,
+        ps.second_paid_at
+      from paid_stats ps
     )
     select
       (
@@ -837,6 +942,7 @@ async function queryMembershipOps(params) {
         coalesce(gt.tier_value, 0) as tier_value
       from chat_message m
       join chat_thread t on t.id = m.thread_id
+      left join "user" u on u.id = t.user_id
       cross join bounds b
       left join lateral (
         select g.tier as tier_value
@@ -853,6 +959,9 @@ async function queryMembershipOps(params) {
       where m.role = 'user'
         and m.created_at >= b.start_ts
         and m.created_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and coalesce(nullif(lower(trim(u.email)), ''), concat('user:', t.user_id::text)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
     ),
     user_tier_turns as (
       select
@@ -882,15 +991,22 @@ async function queryMembershipOps(params) {
         coalesce(lg.tier, 0) as tier_value
       from "user" u
       left join latest_grant lg on lg.user_id = u.id
+      where coalesce(nullif(lower(trim(u.email)), ''), concat('user:', u.id::text)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
     ),
     active_user_set as (
       select distinct t.user_id
       from chat_message m
       join chat_thread t on t.id = m.thread_id
+      left join "user" u on u.id = t.user_id
       cross join bounds b
       where m.role = 'user'
         and m.created_at >= b.start_ts
         and m.created_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and coalesce(nullif(lower(trim(u.email)), ''), concat('user:', t.user_id::text)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
     ),
     population_agg as (
       select
@@ -969,6 +1085,9 @@ async function queryMembershipOps(params) {
         u.created_at
       from "user" u
       where nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and lower(trim(u.email)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
     ),
     email_registration as (
       select
@@ -1000,41 +1119,77 @@ async function queryMembershipOps(params) {
       where er.registered_at >= b.start_ts
         and er.registered_at < b.end_ts
     ),
-    paid_stats as (
+    paid_events_raw as (
       select
         lower(trim(u.email)) as email_key,
-        min(coalesce(g.period_start, g.period_end)) filter (where coalesce(g.tier, 0) > 0) as first_paid_at
-      from redemption_grant g
-      join "user" u on u.id = g.user_id
-      where nullif(trim(u.email), '') is not null
-      group by lower(trim(u.email))
-    ),
-    renew_events as (
-      select distinct
-        lower(trim(u.email)) as email_key,
-        rh.redeemed_at
+        rh.id as event_id,
+        rh.redeemed_at as paid_at,
+        coalesce(rc.tier, 0) as tier_value,
+        coalesce(rc.subscription_days, 0) as subscription_days,
+        coalesce(rc.type, '') as code_type,
+        coalesce(rc.credit_amount, 0) as credit_amount
       from redemption_history rh
       join "user" u on u.id = rh.user_id
       left join redemption_code rc on rc.id = rh.code_id
-      where coalesce(rc.tier, 0) > 0
+      where ${relevantPaidCodeSql("rc")}
         and nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and lower(trim(u.email)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
+        and rh.redeemed_at is not null
     ),
-    renew_ranked as (
+    first_paid_ranked as (
       select
-        re.email_key,
-        re.redeemed_at,
+        per.email_key,
+        per.tier_value,
+        per.subscription_days,
+        per.code_type,
+        per.credit_amount,
         row_number() over (
-          partition by re.email_key
-          order by re.redeemed_at asc
+          partition by per.email_key
+          order by per.paid_at asc, per.event_id asc
         ) as rn
-      from renew_events re
+      from paid_events_raw per
+    ),
+    eligible_paid_emails as (
+      select
+        fpr.email_key
+      from first_paid_ranked fpr
+      where fpr.rn = 1
+        and ${eligibleFirstPaidEntrySql("fpr")}
+    ),
+    paid_events as (
+      select
+        per.email_key,
+        per.event_id,
+        per.paid_at
+      from paid_events_raw per
+      join eligible_paid_emails epe on epe.email_key = per.email_key
+    ),
+    paid_ranked as (
+      select
+        pe.email_key,
+        pe.event_id,
+        pe.paid_at,
+        row_number() over (
+          partition by pe.email_key
+          order by pe.paid_at asc, pe.event_id asc
+        ) as rn
+      from paid_events pe
+    ),
+    paid_stats as (
+      select
+        email_key,
+        min(paid_at) filter (where rn = 1) as first_paid_at,
+        min(paid_at) filter (where rn = 2) as second_paid_at
+      from paid_ranked
+      group by email_key
     ),
     renew_stats as (
       select
-        email_key,
-        min(redeemed_at) filter (where rn = 2) as second_paid_at
-      from renew_ranked
-      group by email_key
+        ps.email_key,
+        ps.second_paid_at
+      from paid_stats ps
     ),
     register_daily as (
       select
@@ -1071,10 +1226,14 @@ async function queryMembershipOps(params) {
         count(distinct t.user_id)::int as value
       from chat_message m
       join chat_thread t on t.id = m.thread_id
+      left join "user" u on u.id = t.user_id
       cross join bounds b
       where m.role = 'user'
         and m.created_at >= b.start_ts
         and m.created_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and coalesce(nullif(lower(trim(u.email)), ''), concat('user:', t.user_id::text)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})
       group by 1
     )
     select
@@ -1185,6 +1344,8 @@ async function queryOverview(params) {
     filterParams.push(value);
     return `$${filterParams.length}`;
   };
+  filters.push("coalesce(u.email_verified, false) = true");
+  filters.push("coalesce(u.banned, false) = false");
 
   if (hasCustomerIdFilter) {
     const customerIdSlot = pushFilterParam(customerIdFilter);
@@ -1340,10 +1501,13 @@ async function queryOverview(params) {
         t.user_id,
         lm.last_feedback
       from chat_thread t
+      left join "user" u on u.id = t.user_id
       left join latest_msg lm on lm.thread_id = t.id
       cross join bounds b
       where t.updated_at >= b.start_ts
         and t.updated_at < b.end_ts
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
     ),
     first_user_message as (
       select
@@ -1383,10 +1547,13 @@ async function queryOverview(params) {
         select count(distinct t2.user_id)::int
         from chat_message m2
         join chat_thread t2 on t2.id = m2.thread_id
+        left join "user" u3 on u3.id = t2.user_id
         cross join bounds b
         where m2.role = 'user'
           and m2.created_at >= b.start_ts
           and m2.created_at < b.end_ts
+          and coalesce(u3.email_verified, false) = true
+          and coalesce(u3.banned, false) = false
       ) as today_active_users,
       (
         select count(*)::int
@@ -1394,6 +1561,8 @@ async function queryOverview(params) {
         cross join bounds b
         where u2.created_at >= b.start_ts
           and u2.created_at < b.end_ts
+          and coalesce(u2.email_verified, false) = true
+          and coalesce(u2.banned, false) = false
       ) as today_registered_users
     from today_threads tt
     left join first_user_message fum on fum.thread_id = tt.id
@@ -1405,25 +1574,39 @@ async function queryOverview(params) {
     await Promise.all([
       pool.query(rowsSql, rowsParams),
       pool.query(countSql, filterParams),
-      pool.query('select count(*)::int as total from "user"'),
+      pool.query(`
+        select count(*)::int as total
+        from "user" u
+        where coalesce(u.email_verified, false) = true
+          and coalesce(u.banned, false) = false
+      `),
       pool.query(`
         select count(distinct g.user_id)::int as total
         from redemption_grant g
+        join "user" u on u.id = g.user_id
         where g.status = 'active'
           and coalesce(g.tier, 0) > 0
           and (g.period_start is null or g.period_start <= now())
           and (g.period_end is null or g.period_end >= now())
+          and coalesce(u.email_verified, false) = true
+          and coalesce(u.banned, false) = false
       `),
       pool.query(`
         select count(distinct t.user_id)::int as total
         from chat_thread t
+        join "user" u on u.id = t.user_id
         where t.updated_at >= now() - interval '${ONLINE_WINDOW_MINUTES} minutes'
+          and coalesce(u.email_verified, false) = true
+          and coalesce(u.banned, false) = false
       `),
       pool.query(`
         select count(distinct t.user_id)::int as total
         from chat_thread t
+        join "user" u on u.id = t.user_id
         join user_profile up on up.user_id = t.user_id
         where t.updated_at >= now() - interval '${LOW_REMAINING_WINDOW_HOURS} hours'
+          and coalesce(u.email_verified, false) = true
+          and coalesce(u.banned, false) = false
           and ${remainingExpr} between 0 and 3
       `),
       pool.query(kpiSql),
@@ -1481,9 +1664,9 @@ async function queryOverview(params) {
   return {
     definitions: {
       timezone: ANALYTICS_TIMEZONE,
-      todayActiveUsers: "当日有 user 角色消息的去重对话用户数",
-      currentOnlineUsers: `${ONLINE_WINDOW_MINUTES} 分钟内有会话活跃（chat_thread.updated_at）的去重用户数`,
-      lowRemainingUsers: `${LOW_REMAINING_WINDOW_HOURS} 小时内活跃且剩余次数 0-3 的去重用户数`,
+      todayActiveUsers: "当日有 user 角色消息的去重对话用户数（仅已验证且未封禁账号）",
+      currentOnlineUsers: `${ONLINE_WINDOW_MINUTES} 分钟内有会话活跃（chat_thread.updated_at）的去重用户数（仅已验证且未封禁账号）`,
+      lowRemainingUsers: `${LOW_REMAINING_WINDOW_HOURS} 小时内活跃且剩余次数 0-3 的去重用户数（仅已验证且未封禁账号）`,
     },
     kpis: {
       todayRegisteredUsers,
@@ -1623,6 +1806,8 @@ async function queryUsers(params = {}) {
         `${rangeFilterField} < ${endBound}`
       );
     }
+
+    whereConditions.push(`lower(trim(f.email)) <> all (${MEMBERSHIP_OPS_EXCLUDED_EMAILS_SQL_ARRAY})`);
   }
 
   if (registerStartDate) {
@@ -1680,6 +1865,8 @@ async function queryUsers(params = {}) {
         u.created_at
       from "user" u
       where nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
     ),
     email_registration as (
       select
@@ -1700,41 +1887,76 @@ async function queryUsers(params = {}) {
         and m.created_at >= er.registered_at
       group by ue.email_key
     ),
-    paid_stats as (
+    paid_events_raw as (
       select
         lower(trim(u.email)) as email_key,
-        min(coalesce(g.period_start, g.period_end)) filter (where coalesce(g.tier, 0) > 0) as first_paid_at
-      from redemption_grant g
-      join "user" u on u.id = g.user_id
-      where nullif(trim(u.email), '') is not null
-      group by lower(trim(u.email))
-    ),
-    renew_events as (
-      select distinct
-        lower(trim(u.email)) as email_key,
-        rh.redeemed_at
+        rh.id as event_id,
+        rh.redeemed_at as paid_at,
+        coalesce(rc.tier, 0) as tier_value,
+        coalesce(rc.subscription_days, 0) as subscription_days,
+        coalesce(rc.type, '') as code_type,
+        coalesce(rc.credit_amount, 0) as credit_amount
       from redemption_history rh
       join "user" u on u.id = rh.user_id
       left join redemption_code rc on rc.id = rh.code_id
-      where coalesce(rc.tier, 0) > 0
+      where ${relevantPaidCodeSql("rc")}
         and nullif(trim(u.email), '') is not null
+        and coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
+        and rh.redeemed_at is not null
     ),
-    renew_ranked as (
+    first_paid_ranked as (
       select
-        re.email_key,
-        re.redeemed_at,
+        per.email_key,
+        per.tier_value,
+        per.subscription_days,
+        per.code_type,
+        per.credit_amount,
         row_number() over (
-          partition by re.email_key
-          order by re.redeemed_at asc
+          partition by per.email_key
+          order by per.paid_at asc, per.event_id asc
         ) as rn
-      from renew_events re
+      from paid_events_raw per
+    ),
+    eligible_paid_emails as (
+      select
+        fpr.email_key
+      from first_paid_ranked fpr
+      where fpr.rn = 1
+        and ${eligibleFirstPaidEntrySql("fpr")}
+    ),
+    paid_events as (
+      select
+        per.email_key,
+        per.event_id,
+        per.paid_at
+      from paid_events_raw per
+      join eligible_paid_emails epe on epe.email_key = per.email_key
+    ),
+    paid_ranked as (
+      select
+        pe.email_key,
+        pe.event_id,
+        pe.paid_at,
+        row_number() over (
+          partition by pe.email_key
+          order by pe.paid_at asc, pe.event_id asc
+        ) as rn
+      from paid_events pe
+    ),
+    paid_stats as (
+      select
+        email_key,
+        min(paid_at) filter (where rn = 1) as first_paid_at,
+        min(paid_at) filter (where rn = 2) as second_paid_at
+      from paid_ranked
+      group by email_key
     ),
     renew_stats as (
       select
-        email_key,
-        min(redeemed_at) filter (where rn = 2) as second_paid_at
-      from renew_ranked
-      group by email_key
+        ps.email_key,
+        ps.second_paid_at
+      from paid_stats ps
     ),
     chat_stats as (
       select
@@ -1798,6 +2020,8 @@ async function queryUsers(params = {}) {
       left join paid_stats ps on ps.email_key = lower(trim(u.email))
       left join renew_stats rs on rs.email_key = lower(trim(u.email))
       left join latest_thread lt on lt.user_id = u.id
+      where coalesce(u.email_verified, false) = true
+        and coalesce(u.banned, false) = false
     ),
     filtered as (
       select
@@ -2025,6 +2249,8 @@ async function queryConversationDetail(conversationId) {
     left join user_profile up on up.user_id = t.user_id
     left join latest_grant lg on lg.user_id = t.user_id
     where t.id = $1
+      and coalesce(u.email_verified, false) = true
+      and coalesce(u.banned, false) = false
     limit 1;
   `;
 

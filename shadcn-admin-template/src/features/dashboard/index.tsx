@@ -292,7 +292,7 @@ export function Dashboard() {
             <h1 className='text-2xl font-bold tracking-tight'>会话总览</h1>
             <p className='text-sm text-muted-foreground'>
               运营 10 秒查看最新会话（展示最新 10-15
-              条），支持快速筛选与批量处理
+              条），支持快速筛选与批量处理（仅统计已验证且未封禁账号）
             </p>
             <p className='mt-1 text-xs text-muted-foreground'>
               口径：{definitions.todayActiveUsers}；{definitions.currentOnlineUsers}

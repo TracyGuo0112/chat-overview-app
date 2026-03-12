@@ -261,7 +261,7 @@ export function Users() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>用户管理</h2>
             <p className='text-muted-foreground'>
-              查看数据库中的真实用户信息与账户状态。
+              查看数据库中的真实用户信息与账户状态（仅统计已验证且未封禁账号）。
             </p>
             <p className='mt-1 text-xs text-muted-foreground'>
               当前结果：{total.toLocaleString()} 人
