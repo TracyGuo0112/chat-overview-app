@@ -12,6 +12,7 @@
     "check:perf": "node scripts/perf-check.js"
   },
   "dependencies": {
+    "@vercel/functions": "^3.4.3",
     "dotenv": "^17.2.4",
     "pg": "^8.18.0"
   },
