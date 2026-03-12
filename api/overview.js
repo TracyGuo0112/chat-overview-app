@@ -6,7 +6,8 @@ module.exports = async (req, res) => {
     const payload = await queryOverview(req.query || {});
     res.status(200).json(payload);
   } catch (err) {
+    const statusCode = Number(err?.statusCode || 500);
     console.error("[overview] query failed", err);
-    res.status(500).json({ error: "overview_query_failed", message: err.message });
+    res.status(statusCode).json({ error: "overview_query_failed", message: err.message });
   }
 };
