@@ -964,7 +964,7 @@ async function queryMembershipOps(params) {
   }));
 
   return {
-    dateRange: { startDate, endDate },
+    range: { timezone: ANALYTICS_TIMEZONE, startDate, endDate },
     funnel: {
       visitors,
       registered,
