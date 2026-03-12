@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --prefix shadcn-admin-template && npm run build --prefix shadcn-admin-template",
+  "outputDirectory": "shadcn-admin-template/dist",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
