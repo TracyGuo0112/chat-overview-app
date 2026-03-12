@@ -957,8 +957,9 @@ async function queryMembershipOps(params) {
 
   const trend = trendResult.rows.map((r) => ({
     date: r.date,
+    label: r.date ? r.date.slice(5) : r.date, // "MM-DD" 格式，用于 X 轴显示
     registered: Number(r.registered || 0),
-    active: Number(r.active || 0),
+    activeUsers: Number(r.active || 0),        // 对齐前端 dataKey='activeUsers'
     subscribed: Number(r.subscribed || 0),
     renewed: Number(r.renewed || 0),
   }));
